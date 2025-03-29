@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import { CloudUpload as UploadIcon } from '@mui/icons-material';
 import { PAPER_CATEGORIES } from '../../constants';
-import { paperService } from '../../services/api';
+import { paperService } from '../../services/adminService';
 
 const PaperUpload = () => {
   const [formData, setFormData] = useState({

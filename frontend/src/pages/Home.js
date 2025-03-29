@@ -16,6 +16,8 @@ import {
   Divider,
   Avatar,
   Chip,
+  Card,
+  CardContent,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -23,8 +25,10 @@ import {
   LocalLibrary as LocalLibraryIcon,
   EmojiObjects as EmojiObjectsIcon,
   Speed as SpeedIcon,
+  Feedback as FeedbackIcon,
 } from '@mui/icons-material';
 import homeStyles from '../styles/HomeStyles';
+import { useAuth } from '../contexts/AuthContext';
 
 // Statistics data
 const stats = [
@@ -38,6 +42,7 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [visible, setVisible] = useState(false);
   const theme = useTheme();
+  const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
     setVisible(true);
@@ -70,6 +75,29 @@ const Home = () => {
                 </Avatar>
               </Box>
             </Fade>
+
+            {isAuthenticated && (
+              <Fade in={visible} timeout={800}>
+                <Box sx={{ position: 'absolute', top: 20, right: 20 }}>
+                  <Card sx={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', maxWidth: 300 }}>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        Welcome back, {user?.name?.split(' ')[0]}!
+                      </Typography>
+                      <Button 
+                        variant="contained" 
+                        color="primary" 
+                        component={RouterLink} 
+                        to="/profile"
+                        sx={{ mt: 1 }}
+                      >
+                        View Profile
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Box>
+              </Fade>
+            )}
 
             <Zoom in={visible} style={{ transitionDelay: '300ms' }}>
               <Typography
@@ -116,7 +144,7 @@ const Home = () => {
               <Paper elevation={0} sx={homeStyles.searchBar}>
                 <TextField
                   fullWidth
-                  placeholder="Search by subject, university, or course code..."
+                  placeholder="Search by Year, Semester and Subject"
                   variant="standard"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -135,13 +163,11 @@ const Home = () => {
                   sx={homeStyles.searchButton}
                   component={RouterLink}
                   to="/search"
-                >
-                  Find Papers
+                > 
+                  Search
                 </Button>
               </Paper>
             </Fade>
-            
-            
             
             <Divider sx={homeStyles.divider} />
             
@@ -154,25 +180,52 @@ const Home = () => {
                 justifyContent="center"
                 alignItems="center"
               >
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                  sx={homeStyles.loginButton}
-                  component={RouterLink}
-                  to="/login"
-                  startIcon={<SpeedIcon />}
-                >
-                  Login
-                </Button>
-                <Button
-                  variant="outlined"
-                  sx={homeStyles.signupButton}
-                  component={RouterLink}
-                  to="/register"
-                >
-                  Sign Up — Free
-                </Button>
+                {!isAuthenticated ? (
+                  <>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      size="large"
+                      sx={homeStyles.loginButton}
+                      component={RouterLink}
+                      to="/login"
+          
+                    >
+                      Login
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      sx={homeStyles.signupButton}
+                      component={RouterLink}
+                      to="/register"
+                    >
+                      Sign Up
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      size="large"
+                      sx={homeStyles.loginButton}
+                      component={RouterLink}
+                      to="/search"
+                      startIcon={<SearchIcon />}
+                    >
+                      Browse Papers
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      sx={homeStyles.signupButton}
+                      component={RouterLink}
+                      to="/feedback"
+                      startIcon={<FeedbackIcon />}
+                    >
+                      Give Feedback
+                    </Button>
+                  </>
+                )}
               </Stack>
             </Fade>
           </Box>

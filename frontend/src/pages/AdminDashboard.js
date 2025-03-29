@@ -11,7 +11,8 @@ import {
   CardContent,
   CardHeader,
   CircularProgress,
-  Alert
+  Alert,
+  useTheme
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -20,7 +21,7 @@ import {
   Feedback as FeedbackIcon,
   CloudUpload as UploadIcon
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { USER_ROLES } from '../constants';
 
@@ -54,7 +55,9 @@ const TabPanel = (props) => {
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const theme = useTheme();
   const [tabValue, setTabValue] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -85,8 +88,26 @@ const AdminDashboard = () => {
     }
   }, [user, navigate]);
 
+  // Check URL parameters for tab selection
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const tabParam = searchParams.get('tab');
+    
+    if (tabParam !== null) {
+      const tabIndex = parseInt(tabParam, 10);
+      if (!isNaN(tabIndex) && tabIndex >= 0 && tabIndex <= 4) {
+        setTabValue(tabIndex);
+      }
+    }
+  }, [location]);
+
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+    
+    // Update URL with tab parameter without causing a navigation
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set('tab', newValue);
+    navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
   };
 
   if (loading) {
@@ -109,7 +130,7 @@ const AdminDashboard = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, borderTop: '4px solid #b71c1c' }}>
+      <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, borderTop: `4px solid ${theme.palette.primary.main}` }}>
         <Typography variant="h4" component="h1" gutterBottom>
           Admin Dashboard
         </Typography>

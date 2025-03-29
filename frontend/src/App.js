@@ -25,6 +25,7 @@ import NotFound from './pages/NotFound';
 import AdminDashboard from './pages/AdminDashboard';
 import Search from './pages/Search';
 import Subjects from './pages/Subjects';
+import Feedback from './pages/Feedback';
 
 // Route Guards
 import ProtectedRoute from './components/routing/ProtectedRoute';
@@ -59,6 +60,7 @@ function App() {
                   <Route path="search" element={<Search />} />
                   <Route path="search-results" element={<SearchResults />} />
                   <Route path="subjects/:year/:semester" element={<Subjects />} />
+                  <Route path="/feedback" element={<Feedback />} />
                   
                   {/* Protected Routes */}
                   <Route 

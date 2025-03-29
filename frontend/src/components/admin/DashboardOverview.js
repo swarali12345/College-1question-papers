@@ -24,7 +24,7 @@ import {
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { Link as RouterLink } from 'react-router-dom';
-import { paperService, userService } from '../../services/api';
+import { paperService, userService } from '../../services/adminService';
 import Chart from 'react-apexcharts';
 
 const StatCard = ({ title, value, icon, color }) => {
@@ -289,145 +289,80 @@ const DashboardOverview = () => {
               Recent Uploads
             </Typography>
             <Divider sx={{ mb: 2 }} />
-            
-            {stats.recentPapers.length === 0 ? (
-              <Box sx={{ p: 2, textAlign: 'center' }}>
-                <Typography variant="body2" color="text.secondary">
-                  No recent uploads
-                </Typography>
-              </Box>
-            ) : (
+            {stats.recentPapers.length > 0 ? (
               <List>
                 {stats.recentPapers.map((paper) => (
-                  <ListItem 
-                    key={paper._id}
-                    secondaryAction={
-                      <Chip 
-                        label={paper.approved ? 'Approved' : 'Pending'} 
-                        color={paper.approved ? 'success' : 'warning'}
-                        size="small"
-                      />
-                    }
-                    sx={{ px: 1 }}
-                  >
+                  <ListItem key={paper.id} divider>
                     <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: paper.approved ? '#4caf50' : '#ff9800' }}>
+                      <Avatar sx={{ bgcolor: 'primary.main' }}>
                         <DescriptionIcon />
                       </Avatar>
                     </ListItemAvatar>
-                    <ListItemText 
-                      primary={
-                        <RouterLink 
-                          to={`/papers/${paper._id}`} 
-                          style={{ textDecoration: 'none', color: 'inherit' }}
-                        >
-                          <Typography variant="body1" component="span" color="primary">
-                            {paper.title}
-                          </Typography>
-                        </RouterLink>
-                      }
+                    <ListItemText
+                      primary={paper.title}
                       secondary={
                         <>
-                          <Typography component="span" variant="body2" color="text.primary">
-                            {paper.department} - {paper.examType}
-                          </Typography>
-                          <Typography component="div" variant="caption" color="text.secondary">
-                            {paper.createdAt ? format(new Date(paper.createdAt), 'MMM dd, yyyy') : ''}
-                          </Typography>
+                          {paper.subject} | {format(new Date(paper.createdAt), 'dd MMM yyyy')}
+                          <Box display="flex" mt={0.5}>
+                            <Chip 
+                              size="small" 
+                              label={paper.status} 
+                              color={paper.status === 'approved' ? 'success' : 'warning'} 
+                              sx={{ mr: 1 }}
+                            />
+                          </Box>
                         </>
                       }
                     />
                   </ListItem>
                 ))}
               </List>
+            ) : (
+              <Typography variant="body1" color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>
+                No recent uploads
+              </Typography>
             )}
-            
-            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-              <Button 
-                component={RouterLink}
-                to="/admin/papers"
-                variant="outlined"
-                size="small"
-              >
-                View All Papers
-              </Button>
-            </Box>
           </Paper>
         </Grid>
-        
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 2, height: '100%' }}>
             <Typography variant="h6" gutterBottom>
               Top Downloaded Papers
             </Typography>
             <Divider sx={{ mb: 2 }} />
-            
-            {stats.topPapers.length === 0 ? (
-              <Box sx={{ p: 2, textAlign: 'center' }}>
-                <Typography variant="body2" color="text.secondary">
-                  No download data available
-                </Typography>
-              </Box>
-            ) : (
+            {stats.topPapers.length > 0 ? (
               <List>
                 {stats.topPapers.map((paper) => (
-                  <ListItem 
-                    key={paper._id}
-                    secondaryAction={
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
-                          👁️ {paper.views}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          ⬇️ {paper.downloads}
-                        </Typography>
-                      </Box>
-                    }
-                    sx={{ px: 1 }}
-                  >
+                  <ListItem key={paper.id} divider>
                     <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: '#3f51b5' }}>
-                        <DescriptionIcon />
+                      <Avatar sx={{ bgcolor: 'secondary.main' }}>
+                        <ThumbUpIcon />
                       </Avatar>
                     </ListItemAvatar>
-                    <ListItemText 
-                      primary={
-                        <RouterLink 
-                          to={`/papers/${paper._id}`} 
-                          style={{ textDecoration: 'none', color: 'inherit' }}
-                        >
-                          <Typography variant="body1" component="span" color="primary">
-                            {paper.title}
-                          </Typography>
-                        </RouterLink>
-                      }
+                    <ListItemText
+                      primary={paper.title}
                       secondary={
                         <>
-                          <Typography component="span" variant="body2" color="text.primary">
-                            {paper.department} - {paper.examType}
-                          </Typography>
-                          <Typography component="div" variant="caption" color="text.secondary">
-                            {paper.year} • {paper.semester} • {paper.subject}
-                          </Typography>
+                          {paper.subject} | {paper.department}
+                          <Box display="flex" mt={0.5}>
+                            <Chip 
+                              size="small" 
+                              label={`${paper.downloads} downloads`} 
+                              color="primary" 
+                              variant="outlined"
+                            />
+                          </Box>
                         </>
                       }
                     />
                   </ListItem>
                 ))}
               </List>
+            ) : (
+              <Typography variant="body1" color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>
+                No download data available
+              </Typography>
             )}
-            
-            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-              <Button
-                component={RouterLink}
-                to="/admin/upload"
-                variant="contained"
-                startIcon={<UploadIcon />}
-                size="small"
-              >
-                Upload New Paper
-              </Button>
-            </Box>
           </Paper>
         </Grid>
       </Grid>

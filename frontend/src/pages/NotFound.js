@@ -17,7 +17,7 @@ const NotFound = () => {
         bgcolor: 'background.default',
       }}
     >
-      <Header />
+      
       
       <Container maxWidth="md" sx={{ flexGrow: 1, py: 4, display: 'flex', alignItems: 'center' }}>
         <Paper elevation={3} sx={{ p: 4, width: '100%', textAlign: 'center' }}>

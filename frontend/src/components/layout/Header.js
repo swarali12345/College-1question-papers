@@ -32,6 +32,9 @@ import {
   AdminPanelSettings as AdminIcon,
   Home as HomeIcon,
   School as SchoolIcon,
+  Feedback as FeedbackIcon,
+  Settings as SettingsIcon,
+  Email as EmailIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES, APP_NAME } from '../../constants';
@@ -171,6 +174,15 @@ const Header = () => {
             <ListItemText primary="Papers" />
           </ListItemButton>
         </ListItem>
+
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => navigate('/feedback')}>
+            <ListItemIcon>
+              <FeedbackIcon />
+            </ListItemIcon>
+            <ListItemText primary="Feedback" />
+          </ListItemButton>
+        </ListItem>
       </List>
       
       {isAuthenticated && (
@@ -284,6 +296,25 @@ const Header = () => {
             >
               Papers
             </Button>
+
+            <Button
+              component={RouterLink}
+              to="/feedback"
+              sx={{ my: 2, color: 'white', display: 'block', mx: 1 }}
+            >
+              Feedback
+            </Button>
+            
+            {isAuthenticated && (
+              <Button
+                component={RouterLink}
+                to={ROUTES.PROFILE}
+                sx={{ my: 2, color: 'white', display: 'block', mx: 1 }}
+                startIcon={<PersonIcon />}
+              >
+                Profile
+              </Button>
+            )}
             
             {isAdmin && (
               <Button
@@ -315,8 +346,17 @@ const Header = () => {
           <Box sx={{ flexGrow: 0 }}>
             {isAuthenticated ? (
               <>
-                <Tooltip title="Open settings">
-                  <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                <Tooltip title={`${user?.name || 'User'} • Click to view profile options`}>
+                  <IconButton 
+                    onClick={handleOpenUserMenu} 
+                    sx={{ 
+                      p: 0,
+                      transition: 'transform 0.2s',
+                      '&:hover': {
+                        transform: 'scale(1.1)',
+                      },
+                    }}
+                  >
                     {user?.profilePicture ? (
                       <Avatar alt={user.name} src={user.profilePicture} />
                     ) : (
@@ -342,6 +382,15 @@ const Header = () => {
                   open={Boolean(anchorElUser)}
                   onClose={handleCloseUserMenu}
                 >
+                  {user && (
+                    <Box sx={{ px: 2, py: 1, minWidth: 200 }}>
+                      <Typography variant="subtitle1" fontWeight="bold">{user.name}</Typography>
+                      <Typography variant="body2" color="text.secondary">{user.email}</Typography>
+                    </Box>
+                  )}
+                  
+                  <Divider />
+                  
                   <MenuItem 
                     onClick={() => {
                       handleCloseUserMenu();
@@ -380,13 +429,25 @@ const Header = () => {
                     </MenuItem>
                   )}
                   
+                  <MenuItem 
+                    onClick={() => {
+                      handleCloseUserMenu();
+                      navigate('/settings');
+                    }}
+                  >
+                    <ListItemIcon>
+                      <SettingsIcon fontSize="small" />
+                    </ListItemIcon>
+                    <Typography textAlign="center">Settings</Typography>
+                  </MenuItem>
+                  
                   <Divider />
                   
                   <MenuItem onClick={handleLogout}>
                     <ListItemIcon>
-                      <LogoutIcon fontSize="small" />
+                      <LogoutIcon fontSize="small" color="error" />
                     </ListItemIcon>
-                    <Typography textAlign="center">Logout</Typography>
+                    <Typography textAlign="center" color="error">Logout</Typography>
                   </MenuItem>
                 </Menu>
               </>
