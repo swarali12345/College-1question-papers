@@ -8,7 +8,7 @@ const path = require('path');
 const mongoSanitize = require('express-mongo-sanitize');
 const helmet = require('helmet');
 
-// Load env vars
+// Load env variables
 dotenv.config();
 
 // Initialize app
@@ -31,10 +31,32 @@ app.use(helmet());
 app.use(mongoSanitize());
 
 // CORS setup
-app.use(cors({
-  origin: process.env.CLIENT_URL,
-  credentials: true
-}));
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://127.0.0.1:3000'
+    ];
+    
+    // Add CLIENT_URL from environment if it exists
+    if (process.env.CLIENT_URL) {
+      allowedOrigins.push(process.env.CLIENT_URL);
+    }
+    
+    // Allow requests with no origin (like mobile apps, curl requests, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 
 // Connect to MongoDB
 const connectDB = async () => {

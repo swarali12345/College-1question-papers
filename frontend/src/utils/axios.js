@@ -1,10 +1,11 @@
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: '/api',
+  baseURL: 'http://localhost:5000',
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Important for cookies
 });
 
 // Add a request interceptor
@@ -25,9 +26,11 @@ instance.interceptors.request.use(
 instance.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.error('API Error:', error);
     if (error.response?.status === 401) {
       // Clear token and redirect to login if unauthorized
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
       localStorage.removeItem('userRole');
       window.location.href = '/login';
     }

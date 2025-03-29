@@ -46,8 +46,8 @@ function App() {
         flexDirection: 'column',
       }}>
         <SnackbarProvider maxSnack={3}>
-          <AuthProvider>
-            <Router>
+          <Router>
+            <AuthProvider>
               <Routes>
                 {/* Authentication Routes outside of layout */}
                 <Route path="login" element={<Login />} />
@@ -97,8 +97,8 @@ function App() {
                   <Route path="*" element={<NotFound />} />
                 </Route>
               </Routes>
-            </Router>
-          </AuthProvider>
+            </AuthProvider>
+          </Router>
         </SnackbarProvider>
       </Box>
     </ThemeProvider>

@@ -1,37 +1,55 @@
 const mongoose = require('mongoose');
 
 const FeedbackSchema = new mongoose.Schema({
+  subject: {
+    type: String,
+    required: [true, 'Please add a subject'],
+    trim: true,
+    maxlength: [100, 'Subject cannot be more than 100 characters']
+  },
+  message: {
+    type: String,
+    required: [true, 'Please add a message'],
+    maxlength: [1000, 'Message cannot be more than 1000 characters']
+  },
+  rating: {
+    type: Number,
+    min: 1,
+    max: 5,
+    required: [true, 'Please add a rating between 1 and 5']
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected', 'resolved'],
+    default: 'pending'
+  },
+  priority: {
+    type: String,
+    enum: ['low', 'medium', 'high'],
+    default: 'medium'
+  },
+  adminResponse: {
+    type: String,
+    default: ''
+  },
+  paper: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Paper',
+    // Paper is optional, as feedback could be about the platform in general
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  paper: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Paper',
-    required: true
-  },
-  rating: {
-    type: Number,
-    required: [true, 'Rating is required'],
-    min: 1,
-    max: 5
-  },
-  comment: {
-    type: String,
-    required: [true, 'Comment is required'],
-    trim: true,
-    maxlength: [500, 'Comment cannot be more than 500 characters']
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'approved', 'rejected'],
-    default: 'pending'
-  },
   createdAt: {
     type: Date,
     default: Date.now
   }
+}, {
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
 // Prevent user from submitting multiple feedbacks for the same paper

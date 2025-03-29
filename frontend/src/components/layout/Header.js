@@ -155,17 +155,6 @@ const Header = () => {
           </ListItemButton>
         </ListItem>
         
-        {isAuthenticated && (
-          <ListItem disablePadding>
-            <ListItemButton onClick={() => navigate(ROUTES.DASHBOARD)}>
-              <ListItemIcon>
-                <DashboardIcon />
-              </ListItemIcon>
-              <ListItemText primary="Dashboard" />
-            </ListItemButton>
-          </ListItem>
-        )}
-        
         <ListItem disablePadding>
           <ListItemButton onClick={() => navigate(ROUTES.SEARCH)}>
             <ListItemIcon>
@@ -305,17 +294,6 @@ const Header = () => {
               Feedback
             </Button>
             
-            {isAuthenticated && (
-              <Button
-                component={RouterLink}
-                to={ROUTES.PROFILE}
-                sx={{ my: 2, color: 'white', display: 'block', mx: 1 }}
-                startIcon={<PersonIcon />}
-              >
-                Profile
-              </Button>
-            )}
-            
             {isAdmin && (
               <Button
                 component={RouterLink}
@@ -403,18 +381,6 @@ const Header = () => {
                     <Typography textAlign="center">Profile</Typography>
                   </MenuItem>
                   
-                  <MenuItem 
-                    onClick={() => {
-                      handleCloseUserMenu();
-                      navigate(ROUTES.DASHBOARD);
-                    }}
-                  >
-                    <ListItemIcon>
-                      <DashboardIcon fontSize="small" />
-                    </ListItemIcon>
-                    <Typography textAlign="center">Dashboard</Typography>
-                  </MenuItem>
-                  
                   {isAdmin && (
                     <MenuItem 
                       onClick={() => {
@@ -428,18 +394,6 @@ const Header = () => {
                       <Typography textAlign="center">Admin Panel</Typography>
                     </MenuItem>
                   )}
-                  
-                  <MenuItem 
-                    onClick={() => {
-                      handleCloseUserMenu();
-                      navigate('/settings');
-                    }}
-                  >
-                    <ListItemIcon>
-                      <SettingsIcon fontSize="small" />
-                    </ListItemIcon>
-                    <Typography textAlign="center">Settings</Typography>
-                  </MenuItem>
                   
                   <Divider />
                   

@@ -1,44 +1,15 @@
 const Feedback = require('../models/Feedback');
-const Paper = require('../models/Paper');
+const User = require('../models/User');
 
-/**
- * @desc    Create a new feedback
- * @route   POST /api/feedback
- * @access  Private
- */
+// @desc    Create new feedback
+// @route   POST /api/feedback
+// @access  Private
 exports.createFeedback = async (req, res) => {
   try {
-    const { paper, rating, comment } = req.body;
+    // Add user to req.body
+    req.body.user = req.user.id;
 
-    // Check if paper exists
-    const paperExists = await Paper.findById(paper);
-    if (!paperExists) {
-      return res.status(404).json({
-        success: false,
-        message: 'Paper not found'
-      });
-    }
-
-    // Check if user has already submitted feedback for this paper
-    const existingFeedback = await Feedback.findOne({
-      user: req.user.id,
-      paper
-    });
-
-    if (existingFeedback) {
-      return res.status(400).json({
-        success: false,
-        message: 'You have already submitted feedback for this paper'
-      });
-    }
-
-    // Create new feedback
-    const feedback = await Feedback.create({
-      user: req.user.id,
-      paper,
-      rating,
-      comment
-    });
+    const feedback = await Feedback.create(req.body);
 
     res.status(201).json({
       success: true,
@@ -48,147 +19,88 @@ exports.createFeedback = async (req, res) => {
     console.error('Create feedback error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server Error',
+      message: 'Failed to create feedback',
       error: error.message
     });
   }
 };
 
-/**
- * @desc    Get all feedback
- * @route   GET /api/feedback
- * @access  Private/Admin
- */
+// @desc    Get all feedbacks (admin only)
+// @route   GET /api/feedback
+// @access  Private/Admin
 exports.getFeedbacks = async (req, res) => {
   try {
-    const { paper, status, limit = 10, page = 1 } = req.query;
-
-    // Build query
-    const query = {};
-    
-    if (paper) query.paper = paper;
-    if (status) query.status = status;
-
-    // Pagination
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    // Get feedbacks with user and paper data
-    const feedbacks = await Feedback.find(query)
-      .populate('user', 'name email')
-      .populate('paper', 'title')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
-
-    const total = await Feedback.countDocuments(query);
+    const feedbacks = await Feedback.find().populate({
+      path: 'user',
+      select: 'name email'
+    }).sort('-createdAt');
 
     res.status(200).json({
       success: true,
       count: feedbacks.length,
-      total,
-      totalPages: Math.ceil(total / parseInt(limit)),
-      currentPage: parseInt(page),
       data: feedbacks
     });
   } catch (error) {
-    console.error('Get feedbacks error:', error);
+    console.error('Get all feedbacks error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server Error',
+      message: 'Failed to get feedbacks',
       error: error.message
     });
   }
 };
 
-/**
- * @desc    Get feedback for a specific paper
- * @route   GET /api/feedback/paper/:paperId
- * @access  Public
- */
+// @desc    Get feedbacks for a specific paper
+// @route   GET /api/feedback/paper/:paperId
+// @access  Public
 exports.getPaperFeedbacks = async (req, res) => {
   try {
-    const { limit = 5, page = 1 } = req.query;
-    const paperId = req.params.paperId;
-
-    // Check if paper exists
-    const paper = await Paper.findById(paperId);
-    if (!paper) {
-      return res.status(404).json({
-        success: false,
-        message: 'Paper not found'
-      });
-    }
-
-    // For public access, only show approved feedback
-    const query = {
-      paper: paperId,
-      status: 'approved'
-    };
-
-    // Pagination
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    // Get approved feedbacks for the paper
-    const feedbacks = await Feedback.find(query)
-      .populate('user', 'name')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
-
-    const total = await Feedback.countDocuments(query);
-
-    // Calculate average rating
-    const ratingStats = await Feedback.aggregate([
-      { $match: { paper: paper._id, status: 'approved' } },
-      { 
-        $group: { 
-          _id: null, 
-          averageRating: { $avg: '$rating' },
-          count: { $sum: 1 }
-        } 
-      }
-    ]);
-
-    const averageRating = ratingStats.length > 0 ? ratingStats[0].averageRating : 0;
-    const ratingCount = ratingStats.length > 0 ? ratingStats[0].count : 0;
+    const feedbacks = await Feedback.find({ 
+      paper: req.params.paperId,
+      status: 'approved' // Only return approved feedbacks for public view
+    }).populate({
+      path: 'user',
+      select: 'name'
+    }).sort('-createdAt');
 
     res.status(200).json({
       success: true,
-      averageRating,
-      ratingCount,
       count: feedbacks.length,
-      total,
-      totalPages: Math.ceil(total / parseInt(limit)),
-      currentPage: parseInt(page),
       data: feedbacks
     });
   } catch (error) {
     console.error('Get paper feedbacks error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server Error',
+      message: 'Failed to get feedbacks for this paper',
       error: error.message
     });
   }
 };
 
-/**
- * @desc    Update feedback status (approve/reject)
- * @route   PUT /api/feedback/:id
- * @access  Private/Admin
- */
+// @desc    Update feedback status (admin only)
+// @route   PUT /api/feedback/:id
+// @access  Private/Admin
 exports.updateFeedbackStatus = async (req, res) => {
   try {
-    const { status } = req.body;
-
-    if (!status || !['pending', 'approved', 'rejected'].includes(status)) {
+    const { status, adminResponse } = req.body;
+    
+    if (!status) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide a valid status (pending, approved, rejected)'
+        message: 'Please provide a status'
       });
     }
 
-    const feedback = await Feedback.findById(req.params.id);
+    // Only allow certain statuses
+    if (!['pending', 'approved', 'rejected', 'resolved'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status value'
+      });
+    }
+
+    let feedback = await Feedback.findById(req.params.id);
 
     if (!feedback) {
       return res.status(404).json({
@@ -197,7 +109,12 @@ exports.updateFeedbackStatus = async (req, res) => {
       });
     }
 
+    // Update fields
     feedback.status = status;
+    if (adminResponse) {
+      feedback.adminResponse = adminResponse;
+    }
+
     await feedback.save();
 
     res.status(200).json({
@@ -208,17 +125,15 @@ exports.updateFeedbackStatus = async (req, res) => {
     console.error('Update feedback status error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server Error',
+      message: 'Failed to update feedback status',
       error: error.message
     });
   }
 };
 
-/**
- * @desc    Delete feedback
- * @route   DELETE /api/feedback/:id
- * @access  Private/Admin or User (own feedback)
- */
+// @desc    Delete feedback
+// @route   DELETE /api/feedback/:id
+// @access  Private
 exports.deleteFeedback = async (req, res) => {
   try {
     const feedback = await Feedback.findById(req.params.id);
@@ -230,9 +145,9 @@ exports.deleteFeedback = async (req, res) => {
       });
     }
 
-    // Check if user is the feedback owner or admin
-    if (feedback.user.toString() !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({
+    // Make sure user is feedback owner or admin
+    if (feedback.user.toString() !== req.user.id && !req.user.isAdmin) {
+      return res.status(401).json({
         success: false,
         message: 'Not authorized to delete this feedback'
       });
@@ -247,9 +162,9 @@ exports.deleteFeedback = async (req, res) => {
   } catch (error) {
     console.error('Delete feedback error:', error);
     res.status(500).json({
-      success: false,
-      message: 'Server Error',
+      success: false, 
+      message: 'Failed to delete feedback',
       error: error.message
     });
   }
-}; 
+};

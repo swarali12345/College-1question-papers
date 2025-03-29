@@ -30,13 +30,7 @@ import {
 import homeStyles from '../styles/HomeStyles';
 import { useAuth } from '../contexts/AuthContext';
 
-// Statistics data
-const stats = [
-  { icon: <SchoolIcon fontSize="large" />, value: '10,000+', label: 'Past Papers' },
-  { icon: <SchoolIcon fontSize="large" />, value: '100+', label: 'Universities' },
-  { icon: <LocalLibraryIcon fontSize="large" />, value: '20+', label: 'Subjects' },
-  { icon: <EmojiObjectsIcon fontSize="large" />, value: '98%', label: 'Success Rate' },
-];
+
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,28 +70,7 @@ const Home = () => {
               </Box>
             </Fade>
 
-            {isAuthenticated && (
-              <Fade in={visible} timeout={800}>
-                <Box sx={{ position: 'absolute', top: 20, right: 20 }}>
-                  <Card sx={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', maxWidth: 300 }}>
-                    <CardContent>
-                      <Typography variant="h6" gutterBottom>
-                        Welcome back, {user?.name?.split(' ')[0]}!
-                      </Typography>
-                      <Button 
-                        variant="contained" 
-                        color="primary" 
-                        component={RouterLink} 
-                        to="/profile"
-                        sx={{ mt: 1 }}
-                      >
-                        View Profile
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </Box>
-              </Fade>
-            )}
+            
 
             <Zoom in={visible} style={{ transitionDelay: '300ms' }}>
               <Typography

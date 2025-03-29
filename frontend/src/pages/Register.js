@@ -78,7 +78,7 @@ const Register = () => {
         email: formData.email,
         password: formData.password,
       });
-      navigate(ROUTES.DASHBOARD);
+      // The navigation is now handled in the AuthContext
     } catch (err) {
       console.error('Registration error:', err);
       setFormError(err.message || 'Registration failed. Please try again.');

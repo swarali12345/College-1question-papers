@@ -1,6 +1,8 @@
 import React, { createContext, useState, useEffect, useCallback, useContext } from 'react';
-import { authService } from '../services/api';
-import { STORAGE_KEYS, USER_ROLES } from '../constants';
+import { authService } from '../services';
+import { USER_ROLES } from '../constants';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '../constants';
 
 export const AuthContext = createContext();
 
@@ -17,6 +19,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
   
   // Initialize user from localStorage on component mount
   useEffect(() => {
@@ -25,19 +28,20 @@ export const AuthProvider = ({ children }) => {
         setLoading(true);
         
         // First try to get user from localStorage
-        const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
+        const storedUser = localStorage.getItem('user');
         
         if (storedUser) {
           setUser(JSON.parse(storedUser));
           
           // Then validate with the backend
           try {
-            const currentUser = await authService.getCurrentUser();
+            const currentUser = await authService.getProfile();
             setUser(currentUser);
           } catch (error) {
             // If token is invalid, clear everything
-            localStorage.removeItem(STORAGE_KEYS.TOKEN);
-            localStorage.removeItem(STORAGE_KEYS.USER);
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('userRole');
             setUser(null);
           }
         }
@@ -57,11 +61,17 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     
     try {
-      const data = await authService.login(credentials);
+      console.log('AuthContext login with:', credentials);
+      const { email, password } = credentials; 
+      const data = await authService.login(email, password);
       setUser(data.user);
+      
+      // Redirect to the search page after successful login
+      navigate(ROUTES.SEARCH);
+      
       return data.user;
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Login failed';
+      const errorMessage = error.message || 'Login failed';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -75,11 +85,17 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     
     try {
-      const data = await authService.register(userData);
+      console.log('AuthContext register with:', userData);
+      const { name, email, password } = userData;
+      const data = await authService.register(name, email, password);
       setUser(data.user);
+      
+      // Redirect to the search page after successful registration
+      navigate(ROUTES.SEARCH);
+      
       return data.user;
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Registration failed';
+      const errorMessage = error.message || 'Registration failed';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -93,11 +109,11 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     
     try {
-      const data = await authService.googleLogin(tokenId);
-      setUser(data.user);
-      return data.user;
+      // This is a placeholder - we don't have Google login implemented yet
+      setError('Google login is not yet implemented');
+      throw new Error('Google login is not yet implemented');
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Google login failed';
+      const errorMessage = error.message || 'Google login failed';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -115,8 +131,9 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Logout error:', error);
       // Even if the server logout fails, clear local user data
-      localStorage.removeItem(STORAGE_KEYS.TOKEN);
-      localStorage.removeItem(STORAGE_KEYS.USER);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('userRole');
       setUser(null);
     } finally {
       setLoading(false);
@@ -133,7 +150,7 @@ export const AuthProvider = ({ children }) => {
       setUser((prevUser) => ({ ...prevUser, ...updatedUser }));
       return updatedUser;
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Profile update failed';
+      const errorMessage = error.message || 'Profile update failed';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -147,7 +164,7 @@ export const AuthProvider = ({ children }) => {
   };
   
   // Check if user is admin
-  const isAdmin = user?.role === USER_ROLES.ADMIN;
+  const isAdmin = user?.isAdmin === true;
   const isAuthenticated = !!user;
   
   return (
