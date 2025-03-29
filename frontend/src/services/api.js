@@ -29,13 +29,12 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     
     // If the error is 401 (Unauthorized) and it's not a retry
-    if (error.response?.status === 401 && !originalRequest._retry && 
-        error.response?.data?.message === 'Token expired') {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       
       try {
         // Call the refresh token endpoint
-        const response = await axios.get(API_ENDPOINTS.AUTH.REFRESH, { 
+        const response = await axios.get('/auth/refresh', { 
           withCredentials: true 
         });
         
@@ -61,7 +60,7 @@ api.interceptors.response.use(
 // Auth Services
 const authService = {
   login: async (credentials) => {
-    const response = await api.post(API_ENDPOINTS.AUTH.LOGIN, credentials);
+    const response = await api.post(API_ENDPOINTS.LOGIN, credentials);
     if (response.data?.token) {
       localStorage.setItem(STORAGE_KEYS.TOKEN, response.data.token);
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data.user));
@@ -70,7 +69,7 @@ const authService = {
   },
   
   register: async (userData) => {
-    const response = await api.post(API_ENDPOINTS.AUTH.REGISTER, userData);
+    const response = await api.post(API_ENDPOINTS.REGISTER, userData);
     if (response.data?.token) {
       localStorage.setItem(STORAGE_KEYS.TOKEN, response.data.token);
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data.user));
@@ -79,13 +78,13 @@ const authService = {
   },
   
   logout: async () => {
-    await api.post(API_ENDPOINTS.AUTH.LOGOUT);
+    await api.post(API_ENDPOINTS.LOGOUT);
     localStorage.removeItem(STORAGE_KEYS.TOKEN);
     localStorage.removeItem(STORAGE_KEYS.USER);
   },
   
   getCurrentUser: async () => {
-    const response = await api.get(API_ENDPOINTS.AUTH.ME);
+    const response = await api.get(API_ENDPOINTS.PROFILE);
     if (response.data) {
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data));
     }
@@ -93,10 +92,21 @@ const authService = {
   },
   
   googleLogin: async (tokenId) => {
-    const response = await api.post(API_ENDPOINTS.AUTH.GOOGLE, { tokenId });
+    const response = await api.post(API_ENDPOINTS.GOOGLE_LOGIN, { tokenId });
     if (response.data?.token) {
       localStorage.setItem(STORAGE_KEYS.TOKEN, response.data.token);
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data.user));
+    }
+    return response.data;
+  },
+  
+  updateProfile: async (profileData) => {
+    const response = await api.put(API_ENDPOINTS.PROFILE, profileData);
+    if (response.data) {
+      // Update stored user data
+      const storedUser = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || '{}');
+      const updatedUser = { ...storedUser, ...response.data };
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(updatedUser));
     }
     return response.data;
   },
@@ -106,20 +116,20 @@ const authService = {
 const paperService = {
   getAllPapers: async (page = 1, limit = 10, filters = {}) => {
     const params = { page, limit, ...filters };
-    return api.get(API_ENDPOINTS.PAPERS.BASE, { params });
+    return api.get(API_ENDPOINTS.PAPERS, { params });
   },
   
   getPaper: async (id) => {
-    return api.get(`${API_ENDPOINTS.PAPERS.BASE}/${id}`);
+    return api.get(`${API_ENDPOINTS.PAPERS}/${id}`);
   },
   
   searchPapers: async (searchQuery, filters = {}) => {
     const params = { q: searchQuery, ...filters };
-    return api.get(API_ENDPOINTS.PAPERS.SEARCH, { params });
+    return api.get(`${API_ENDPOINTS.PAPERS}/search`, { params });
   },
   
   uploadPaper: async (formData) => {
-    return api.post(API_ENDPOINTS.PAPERS.UPLOAD, formData, {
+    return api.post(`${API_ENDPOINTS.PAPERS}/upload`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -127,45 +137,34 @@ const paperService = {
   },
   
   updatePaper: async (id, paperData) => {
-    return api.put(`${API_ENDPOINTS.PAPERS.BASE}/${id}`, paperData);
+    return api.put(`${API_ENDPOINTS.PAPERS}/${id}`, paperData);
   },
   
   deletePaper: async (id) => {
-    return api.delete(`${API_ENDPOINTS.PAPERS.BASE}/${id}`);
+    return api.delete(`${API_ENDPOINTS.PAPERS}/${id}`);
   },
   
   getDepartmentStats: async () => {
-    return api.get(`${API_ENDPOINTS.PAPERS.STATS}/departments`);
+    return api.get(`${API_ENDPOINTS.PAPERS}/stats/departments`);
   },
   
   getYearStats: async () => {
-    return api.get(`${API_ENDPOINTS.PAPERS.STATS}/years`);
+    return api.get(`${API_ENDPOINTS.PAPERS}/stats/years`);
   },
 };
 
 // User Services
 const userService = {
-  updateProfile: async (profileData) => {
-    const response = await api.put(API_ENDPOINTS.USERS.PROFILE, profileData);
-    if (response.data) {
-      // Update stored user data
-      const storedUser = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || '{}');
-      const updatedUser = { ...storedUser, ...response.data };
-      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(updatedUser));
-    }
-    return response.data;
-  },
-  
   getAllUsers: async () => {
-    return api.get(API_ENDPOINTS.USERS.ALL);
+    return api.get('/users');
   },
   
   getUser: async (id) => {
-    return api.get(`${API_ENDPOINTS.USERS.ALL}/${id}`);
+    return api.get(`/users/${id}`);
   },
   
   deleteUser: async (id) => {
-    return api.delete(`${API_ENDPOINTS.USERS.ALL}/${id}`);
+    return api.delete(`/users/${id}`);
   },
 };
 

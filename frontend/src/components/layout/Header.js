@@ -31,10 +31,10 @@ import {
   Logout as LogoutIcon,
   AdminPanelSettings as AdminIcon,
   Home as HomeIcon,
-  School as SchoolIcon,
+  MenuBook as MenuBookIcon,
 } from '@mui/icons-material';
-import { useAuth } from '../hooks/useAuth';
-import { ROUTES, APP_NAME } from '../constants';
+import { useAuth } from '../../contexts/AuthContext';
+import { ROUTES, APP_NAME } from '../../constants';
 
 // Styled search bar component
 const Search = styled('div')(({ theme }) => ({
@@ -76,7 +76,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-const Navbar = () => {
+const Header = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
   
@@ -136,7 +136,7 @@ const Navbar = () => {
       onKeyDown={toggleDrawer(false)}
     >
       <Box sx={{ p: 2, display: 'flex', alignItems: 'center' }}>
-        <SchoolIcon sx={{ mr: 1, color: 'primary.main' }} />
+        <MenuBookIcon sx={{ mr: 1, color: 'primary.main' }} />
         <Typography variant="h6" color="primary" fontWeight="bold">
           {APP_NAME}
         </Typography>
@@ -188,7 +188,7 @@ const Navbar = () => {
             
             {isAdmin && (
               <ListItem disablePadding>
-                <ListItemButton onClick={() => navigate(ROUTES.ADMIN)}>
+                <ListItemButton onClick={() => navigate(ROUTES.ADMIN.DASHBOARD)}>
                   <ListItemIcon>
                     <AdminIcon />
                   </ListItemIcon>
@@ -212,7 +212,7 @@ const Navbar = () => {
   );
 
   return (
-    <AppBar position="sticky">
+    <AppBar position="sticky" sx={{ bgcolor: 'primary.dark' }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           {/* Mobile menu icon */}
@@ -228,7 +228,7 @@ const Navbar = () => {
           </IconButton>
           
           {/* Logo and title - desktop */}
-          <SchoolIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
+          <MenuBookIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, fontSize: 30 }} />
           <Typography
             variant="h6"
             noWrap
@@ -237,17 +237,18 @@ const Navbar = () => {
             sx={{
               display: { xs: 'none', md: 'flex' },
               fontWeight: 700,
-              letterSpacing: '.05rem',
-              color: 'inherit',
+              fontSize: '1.5rem',
+              letterSpacing: '.1rem',
+              color: 'white',
               textDecoration: 'none',
               mr: 2,
             }}
           >
-            {APP_NAME}
+            PYQ-PAPERS
           </Typography>
           
           {/* Logo and title - mobile */}
-          <SchoolIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
+          <MenuBookIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1, fontSize: 28 }} />
           <Typography
             variant="h6"
             noWrap
@@ -257,16 +258,17 @@ const Navbar = () => {
               display: { xs: 'flex', md: 'none' },
               flexGrow: 1,
               fontWeight: 700,
+              fontSize: '1.2rem',
               letterSpacing: '.05rem',
-              color: 'inherit',
+              color: 'white',
               textDecoration: 'none',
             }}
           >
-            {APP_NAME}
+            PYQ-PAPERS
           </Typography>
           
           {/* Navigation links - desktop */}
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, ml: 2 }}>
             <Button
               component={RouterLink}
               to={ROUTES.HOME}
@@ -279,12 +281,12 @@ const Navbar = () => {
               to={ROUTES.SEARCH}
               sx={{ my: 2, color: 'white', display: 'block' }}
             >
-              Search Papers
+              Papers
             </Button>
             {isAdmin && (
               <Button
                 component={RouterLink}
-                to={ROUTES.ADMIN}
+                to={ROUTES.ADMIN.DASHBOARD}
                 sx={{ my: 2, color: 'white', display: 'block' }}
               >
                 Admin
@@ -316,7 +318,9 @@ const Navbar = () => {
                     {user?.profilePicture ? (
                       <Avatar alt={user.name} src={user.profilePicture} />
                     ) : (
-                      <Avatar>{getUserInitials()}</Avatar>
+                      <Avatar sx={{ bgcolor: 'secondary.main', color: 'primary.main' }}>
+                        {getUserInitials()}
+                      </Avatar>
                     )}
                   </IconButton>
                 </Tooltip>
@@ -364,7 +368,7 @@ const Navbar = () => {
                     <MenuItem 
                       onClick={() => {
                         handleCloseUserMenu();
-                        navigate(ROUTES.ADMIN);
+                        navigate(ROUTES.ADMIN.DASHBOARD);
                       }}
                     >
                       <ListItemIcon>
@@ -390,6 +394,7 @@ const Navbar = () => {
                   component={RouterLink}
                   to={ROUTES.LOGIN}
                   color="inherit"
+                  variant="text"
                   sx={{ mr: 1 }}
                 >
                   Login
@@ -420,4 +425,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar; 
+export default Header; 

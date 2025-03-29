@@ -1,62 +1,132 @@
-export const API_ENDPOINTS = {
-  AUTH: {
-    LOGIN: '/api/auth/login',
-    REGISTER: '/api/auth/register',
-    LOGOUT: '/api/auth/logout',
-    REFRESH: '/api/auth/refresh',
-    ME: '/api/auth/me',
-    GOOGLE: '/api/auth/google',
-  },
-  PAPERS: {
-    BASE: '/api/papers',
-    SEARCH: '/api/papers/search',
-    UPLOAD: '/api/papers/upload',
-    DOWNLOAD: '/api/papers/download',
-    STATS: '/api/papers/stats',
-  },
-  USERS: {
-    PROFILE: '/api/users/profile',
-    ALL: '/api/users',
-  },
+// User Roles
+export const USER_ROLES = {
+  ADMIN: 'admin',
+  USER: 'user'
 };
 
+// Local Storage Keys
+export const STORAGE_KEYS = {
+  TOKEN: 'auth_token',
+  USER: 'user_data'
+};
+
+// Application Name
+export const APP_NAME = 'PYQ-PAPERS';
+
+// Application Routes
 export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
   REGISTER: '/register',
-  DASHBOARD: '/dashboard',
-  ADMIN: '/admin',
   PROFILE: '/profile',
   SEARCH: '/search',
+  DASHBOARD: '/profile',
   PAPER_DETAILS: '/papers/:id',
-  PAPER_VIEW: '/papers/view/:id',
-  NOT_FOUND: '/404',
+  PAPER_VIEW: (id) => `/papers/${id}`,
+  ADMIN: {
+    DASHBOARD: '/admin',
+    PAPERS: '/admin/papers',
+    PAPER_EDIT: '/admin/papers/edit/:id',
+    PAPER_EDIT_WITH_ID: (id) => `/admin/papers/edit/${id}`,
+    USERS: '/admin/users',
+    FEEDBACK: '/admin/feedback'
+  }
 };
 
-export const STORAGE_KEYS = {
-  TOKEN: 'pyq_token',
-  USER: 'pyq_user',
-  THEME: 'pyq_theme',
+// API Endpoints
+export const API_ENDPOINTS = {
+  LOGIN: '/auth/login',
+  REGISTER: '/auth/register',
+  GOOGLE_LOGIN: '/auth/google',
+  LOGOUT: '/auth/logout',
+  PROFILE: '/users/profile',
+  PAPERS: '/papers',
+  FEEDBACK: '/feedback'
 };
 
-export const USER_ROLES = {
-  USER: 'user',
-  ADMIN: 'admin',
-};
-
+// Paper Categories
 export const PAPER_CATEGORIES = {
-  YEARS: ['First Year', 'Second Year', 'Third Year', 'Final Year'],
-  EXAM_TYPES: ['Mid-Semester', 'End-Semester', 'Quiz', 'Assignment'],
+  // Main subject categories
+  SUBJECTS: [
+    { id: 'engineering', name: 'Engineering' },
+    { id: 'medical', name: 'Medical Sciences' },
+    { id: 'science', name: 'Science' },
+    { id: 'business', name: 'Business' },
+    { id: 'arts', name: 'Arts & Humanities' },
+    { id: 'social', name: 'Social Sciences' },
+    { id: 'law', name: 'Law' },
+    { id: 'computer', name: 'Computer Science' },
+    { id: 'mathematics', name: 'Mathematics' },
+    { id: 'physics', name: 'Physics' },
+    { id: 'chemistry', name: 'Chemistry' },
+    { id: 'biology', name: 'Biology' }
+  ],
+  
+  // Department options
   DEPARTMENTS: [
     'Computer Science',
-    'Information Technology',
-    'Electronics',
-    'Electrical',
-    'Mechanical',
-    'Civil',
-    'Chemical',
-    'Biotechnology',
+    'Electrical Engineering',
+    'Mechanical Engineering',
+    'Civil Engineering',
+    'Medicine',
+    'Dentistry',
+    'Pharmacy',
+    'Business Administration',
+    'Economics',
+    'Finance',
+    'Mathematics',
+    'Physics',
+    'Chemistry',
+    'Biology',
+    'Humanities',
+    'Social Sciences',
+    'Law',
+    'Architecture',
+    'Education',
+    'Psychology'
   ],
-};
-
-export const APP_NAME = 'PYQ-PAPERS'; 
+  
+  // Academic years
+  YEARS: [
+    '2023',
+    '2022',
+    '2021',
+    '2020',
+    '2019',
+    '2018',
+    '2017',
+    '2016',
+    '2015',
+    '2014'
+  ],
+  
+  // Semester options
+  SEMESTERS: [
+    'Fall',
+    'Spring',
+    'Summer',
+    'Winter',
+    'First Semester',
+    'Second Semester',
+    'Third Semester',
+    'Fourth Semester',
+    'Fifth Semester',
+    'Sixth Semester',
+    'Seventh Semester',
+    'Eighth Semester'
+  ],
+  
+  // Exam types
+  EXAM_TYPES: [
+    'Midterm',
+    'Final',
+    'Quiz',
+    'Assignment',
+    'Project',
+    'Practical',
+    'Comprehensive',
+    'Entrance Exam',
+    'Qualifying Exam',
+    'Placement Test'
+  ]
+}; 

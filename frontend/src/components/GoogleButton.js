@@ -16,7 +16,7 @@ const GoogleButton = ({ onClick, disabled, loading, text = 'Sign in with Google'
         py: 1.2,
         bgcolor: 'white',
         color: '#757575',
-        border: '1px solid #dadce0',
+        border: '1px solid green',
         '&:hover': {
           bgcolor: '#f8f9fa',
           borderColor: '#dadce0',

@@ -22,6 +22,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { USER_ROLES } from '../constants';
 
 // Import admin components
 import DashboardOverview from '../components/admin/DashboardOverview';
@@ -63,13 +64,13 @@ const AdminDashboard = () => {
     setLoading(true);
     
     // Redirect non-admin users
-    if (user && user.role !== 'admin') {
+    if (user && user.role !== USER_ROLES.ADMIN) {
       navigate('/');
       return;
     }
     
     // If authentication is complete and user is admin, proceed
-    if (user && user.role === 'admin') {
+    if (user && user.role === USER_ROLES.ADMIN) {
       setLoading(false);
     }
     
@@ -108,7 +109,7 @@ const AdminDashboard = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3 }}>
+      <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, borderTop: '4px solid #b71c1c' }}>
         <Typography variant="h4" component="h1" gutterBottom>
           Admin Dashboard
         </Typography>

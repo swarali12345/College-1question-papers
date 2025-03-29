@@ -3,33 +3,30 @@ import {
   Box,
   Container,
   Paper,
-  TextField,
   Button,
   Typography,
-  AppBar,
-  Toolbar,
-  IconButton,
-  useTheme,
-  useMediaQuery,
-  InputAdornment,
+  Divider,
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import {
   Email as EmailIcon,
   Lock as LockIcon,
-  Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon,
-  Menu as MenuIcon,
-  School as SchoolIcon,
   Person as PersonIcon,
+  MenuBook as MenuBookIcon,
+  PersonAdd as PersonAddIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
+import { ROUTES } from '../constants';
+import FormField from '../components/common/FormField';
+import GoogleButton from '../components/common/GoogleButton';
 import { styles } from '../styles/RegisterStyles';
 
 const Register = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
+  const { register, googleLogin, loading, error, clearError } = useAuth();
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -38,234 +35,149 @@ const Register = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+    // Clear errors when user types
+    setFormError('');
+    clearError && clearError();
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setFormError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setFormError('Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setFormError('Password must be at least 6 characters');
       return;
     }
 
     try {
-      const response = await axios.post('/api/users/register', {
+      await register({
         name: formData.name,
         email: formData.email,
         password: formData.password,
       });
-
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('userRole', response.data.user.role);
-        navigate('/user-dashboard');
-      }
+      navigate(ROUTES.DASHBOARD);
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      console.error('Registration error:', err);
+      setFormError(err.message || 'Registration failed. Please try again.');
     }
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(!showConfirmPassword);
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    try {
+      // For now, just show this is not implemented
+      // In a real implementation, you would use a Google OAuth library
+      setFormError('Google signup is not yet implemented in this demo');
+      setTimeout(() => setGoogleLoading(false), 1000);
+      
+      // Actual implementation would be something like:
+      // const response = await googleLogin(googleTokenId);
+    } catch (err) {
+      console.error('Google signup error:', err);
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   return (
     <Box sx={styles.root}>
-      {/* Header */}
-      <AppBar position="static" sx={styles.appBar}>
-        <Toolbar>
-          <SchoolIcon sx={styles.schoolIcon} />
-          <Typography variant="h6" component="div" sx={styles.toolbarTitle}>
-            SIT PYQ Papers
-          </Typography>
-          {isMobile ? (
-            <>
-              <IconButton
-                color="inherit"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                edge="end"
-              >
-                <MenuIcon />
-              </IconButton>
-              {mobileMenuOpen && (
-                <Box sx={styles.mobileMenu}>
-                  <Button fullWidth color="inherit" href="/" sx={styles.mobileMenuButton}>Home</Button>
-                  <Button fullWidth color="inherit" href="/admin" sx={styles.mobileMenuButton}>Admin Panel</Button>
-                  <Button fullWidth color="inherit" href="/login" sx={styles.mobileMenuButton}>Login</Button>
-                </Box>
-              )}
-            </>
-          ) : (
-            <Box>
-              <Button color="inherit" href="/">Home</Button>
-              <Button color="inherit" href="/admin">Admin Panel</Button>
-              <Button color="inherit" href="/login">Login</Button>
-            </Box>
-          )}
-        </Toolbar>
-      </AppBar>
-
-      {/* Main Content */}
       <Box sx={styles.mainContent}>
         <Container maxWidth="xs">
           <Paper elevation={3} sx={styles.paper}>
-            <SchoolIcon sx={styles.registerIcon} />
-            <Typography
-              component="h1"
-              variant="h4"
-              sx={styles.title}
-            >
+            <MenuBookIcon sx={styles.registerIcon} />
+            <Typography component="h1" variant="h4" sx={styles.title}>
               Register
             </Typography>
 
-            {error && (
-              <Typography 
-                color="error" 
-                sx={styles.errorMessage}
-              >
-                {error}
-              </Typography>
+            {/* Show either API error or form validation error */}
+            {(error || formError) && (
+              <Alert severity="error" sx={styles.errorMessage}>
+                {error || formError}
+              </Alert>
             )}
 
-            <Box 
-              component="form" 
-              onSubmit={handleSubmit} 
-              sx={styles.form}
-            >
-              <TextField
-                required
-                fullWidth
-                id="name"
-                label="Full Name"
+            <Box component="form" onSubmit={handleSubmit} sx={styles.form}>
+              <FormField
                 name="name"
-                autoComplete="name"
-                autoFocus
+                label="Full Name"
                 value={formData.name}
                 onChange={handleChange}
-                variant="outlined"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <PersonIcon sx={styles.iconColor} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={styles.textField}
+                autoComplete="name"
+                autoFocus
+                icon={PersonIcon}
               />
-              <TextField
-                required
-                fullWidth
-                id="email"
-                label="Email"
+              <FormField
                 name="email"
-                autoComplete="email"
+                label="Email"
                 value={formData.email}
                 onChange={handleChange}
-                variant="outlined"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EmailIcon sx={styles.iconColor} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={styles.textField}
+                autoComplete="email"
+                icon={EmailIcon}
               />
-              <TextField
-                required
-                fullWidth
+              <FormField
                 name="password"
                 label="Password"
                 type={showPassword ? 'text' : 'password'}
-                id="password"
-                autoComplete="new-password"
                 value={formData.password}
                 onChange={handleChange}
-                variant="outlined"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LockIcon sx={styles.iconColor} />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={togglePasswordVisibility}
-                        edge="end"
-                      >
-                        {showPassword ? (
-                          <VisibilityOffIcon sx={styles.iconColor} />
-                        ) : (
-                          <VisibilityIcon sx={styles.iconColor} />
-                        )}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={styles.textField}
+                autoComplete="new-password"
+                icon={LockIcon}
+                showPassword={showPassword}
+                onTogglePassword={() => setShowPassword(!showPassword)}
               />
-              <TextField
-                required
-                fullWidth
+              <FormField
                 name="confirmPassword"
                 label="Confirm Password"
                 type={showConfirmPassword ? 'text' : 'password'}
-                id="confirmPassword"
-                autoComplete="new-password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                variant="outlined"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LockIcon sx={styles.iconColor} />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={toggleConfirmPasswordVisibility}
-                        edge="end"
-                      >
-                        {showConfirmPassword ? (
-                          <VisibilityOffIcon sx={styles.iconColor} />
-                        ) : (
-                          <VisibilityIcon sx={styles.iconColor} />
-                        )}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={styles.textField}
+                autoComplete="new-password"
+                icon={LockIcon}
+                showPassword={showConfirmPassword}
+                onTogglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
               />
               <Button
                 type="submit"
                 fullWidth
                 variant="contained"
+                color="primary"
+                disabled={loading}
                 sx={styles.submitButton}
+                startIcon={loading ? <CircularProgress size={20} /> : <PersonAddIcon />}
               >
-                Register
+                {loading ? 'Please wait...' : 'Register'}
               </Button>
-
+              
+              <Divider sx={styles.divider}>
+                <Typography variant="body2" color="text.secondary">
+                  OR
+                </Typography>
+              </Divider>
+              
+              <GoogleButton 
+                onClick={handleGoogleLogin}
+                loading={googleLoading}
+                disabled={loading}
+              />
+              
               <Box sx={styles.loginBox}>
                 <Typography variant="body2" sx={styles.secondaryText}>
-                  Already have an account?{' '}
+                  Existing user?{' '}
                   <Button
-                    onClick={() => navigate('/login')}
+                    onClick={() => navigate(ROUTES.LOGIN)}
                     sx={styles.loginButton}
                   >
                     Login

@@ -3,7 +3,7 @@ import { Box, Button, Container, Typography, Paper } from '@mui/material';
 import { Search as SearchIcon, Home as HomeIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../constants';
-import Header from '../components/Header';
+import Header from '../components/layout/Header';
 
 const NotFound = () => {
   const navigate = useNavigate();

@@ -9,14 +9,14 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { School as SchoolIcon } from '@mui/icons-material';
+import { MenuBook as MenuBookIcon } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
 import { ROUTES, APP_NAME } from '../constants';
-import Header from '../components/Header';
-import FormField from '../components/FormField';
-import GoogleButton from '../components/GoogleButton';
-import { Email as EmailIcon, Lock as LockIcon } from '@mui/icons-material';
+import FormField from '../components/common/FormField';
+import GoogleButton from '../components/common/GoogleButton';
+import { Email as EmailIcon, Lock as LockIcon, Login as LoginIcon } from '@mui/icons-material';
+import { styles } from '../styles/LoginStyles';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -92,44 +92,23 @@ const Login = () => {
   };
 
   return (
-    <Box sx={{ 
-      minHeight: '100vh', 
-      display: 'flex', 
-      flexDirection: 'column',
-      bgcolor: 'background.default' 
-    }}>
-      <Header />
-
-      <Box sx={{ 
-        flexGrow: 1, 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        p: 2
-      }}>
+    <Box sx={styles.root}>
+      <Box sx={styles.mainContent}>
         <Container maxWidth="xs">
-          <Paper 
-            elevation={3} 
-            sx={{ 
-              p: 4, 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center' 
-            }}
-          >
-            <SchoolIcon sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-            <Typography component="h1" variant="h4" fontWeight="bold" sx={{ mb: 3 }}>
-              Login to {APP_NAME}
+          <Paper elevation={3} sx={styles.paper}>
+            <MenuBookIcon sx={styles.loginIcon} />
+            <Typography component="h1" variant="h4" fontWeight="bold" sx={styles.title}>
+              Login
             </Typography>
 
             {/* Show either API error or form validation error */}
             {(error || formError) && (
-              <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
+              <Alert severity="error" sx={styles.errorMessage}>
                 {error || formError}
               </Alert>
             )}
 
-            <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+            <Box component="form" onSubmit={handleSubmit} sx={styles.form}>
               <FormField
                 name="email"
                 label="Email"
@@ -155,12 +134,13 @@ const Login = () => {
                 fullWidth
                 variant="contained"
                 disabled={loading}
-                sx={{ mt: 3, mb: 2, py: 1.2 }}
+                sx={styles.submitButton}
+                startIcon={loading ? <CircularProgress size={20} /> : <LoginIcon />}
               >
-                {loading ? <CircularProgress size={24} /> : 'Login'}
+                {loading ? 'Please wait...' : 'Login'}
               </Button>
               
-              <Divider sx={{ my: 2 }}>
+              <Divider sx={styles.divider}>
                 <Typography variant="body2" color="text.secondary">
                   OR
                 </Typography>
@@ -172,12 +152,12 @@ const Login = () => {
                 disabled={loading}
               />
 
-              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-                <Typography variant="body2" color="text.secondary">
-                  Don't have an account?{' '}
+              <Box sx={styles.registerBox}>
+                <Typography variant="body2" sx={styles.secondaryText}>
+                  New user?{' '}
                   <Button
                     onClick={() => navigate(ROUTES.REGISTER)}
-                    sx={{ p: 0, textTransform: 'none', fontWeight: 600 }}
+                    sx={styles.registerButton}
                   >
                     Register
                   </Button>

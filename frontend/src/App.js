@@ -11,7 +11,7 @@ import theme from './theme';
 import { AuthProvider } from './contexts/AuthContext';
 
 // Layout
-import Layout from './components/Layout';
+import Layout from './components/layout/Layout';
 
 // Routes Components
 import Home from './pages/Home';

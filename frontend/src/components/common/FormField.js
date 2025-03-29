@@ -20,6 +20,7 @@ const FormField = ({
   icon: IconComponent,
   showPassword,
   onTogglePassword,
+  sx,
 }) => {
   return (
     <TextField
@@ -35,10 +36,30 @@ const FormField = ({
       autoComplete={autoComplete}
       autoFocus={autoFocus}
       variant="outlined"
+      sx={{
+        ...sx,
+        '& .MuiInputBase-root': {
+          fontSize: { xs: '0.9rem', sm: '1rem' },
+        },
+        '& .MuiInputLabel-root': {
+          fontSize: { xs: '0.9rem', sm: '1rem' },
+        },
+        '& .MuiOutlinedInput-root': {
+          '&:hover fieldset': {
+            borderColor: 'primary.main',
+          },
+          '&.Mui-focused fieldset': {
+            borderColor: 'primary.main',
+          },
+        },
+        '& .MuiInputLabel-root.Mui-focused': {
+          color: 'primary.main',
+        },
+      }}
       InputProps={{
         startAdornment: IconComponent && (
           <InputAdornment position="start">
-            <IconComponent color="primary" />
+            <IconComponent color="primary" sx={{ fontSize: { xs: 20, sm: 24 } }} />
           </InputAdornment>
         ),
         endAdornment: onTogglePassword && (
@@ -47,8 +68,13 @@ const FormField = ({
               aria-label="toggle password visibility"
               onClick={onTogglePassword}
               edge="end"
+              size="medium"
+              color="primary"
             >
-              {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+              {showPassword ? 
+                <VisibilityOffIcon sx={{ fontSize: { xs: 20, sm: 24 } }} /> : 
+                <VisibilityIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
+              }
             </IconButton>
           </InputAdornment>
         ),
