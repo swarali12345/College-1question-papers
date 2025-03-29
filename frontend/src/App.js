@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { SnackbarProvider } from 'notistack';
+import { Box } from '@mui/material';
 
 // Theme
 import theme from './theme';
@@ -22,6 +23,8 @@ import PaperDetails from './pages/PaperDetails';
 import SearchResults from './pages/SearchResults';
 import NotFound from './pages/NotFound';
 import AdminDashboard from './pages/AdminDashboard';
+import Search from './pages/Search';
+import Subjects from './pages/Subjects';
 
 // Route Guards
 import ProtectedRoute from './components/routing/ProtectedRoute';
@@ -34,56 +37,68 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <SnackbarProvider maxSnack={3}>
-        <AuthProvider>
-          <Router>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Home />} />
+      <Box sx={{ 
+        minHeight: '100vh', 
+        position: 'relative',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        <SnackbarProvider maxSnack={3}>
+          <AuthProvider>
+            <Router>
+              <Routes>
+                {/* Authentication Routes outside of layout */}
                 <Route path="login" element={<Login />} />
                 <Route path="register" element={<Register />} />
-                <Route path="papers/:id" element={<PaperDetails />} />
-                <Route path="search" element={<SearchResults />} />
                 
-                {/* Protected Routes */}
-                <Route 
-                  path="profile" 
-                  element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  } 
-                />
-                
-                {/* Admin Routes */}
-                <Route 
-                  path="admin" 
-                  element={
-                    <AdminRoute>
-                      <AdminDashboard />
-                    </AdminRoute>
-                  } 
-                />
-                
-                <Route 
-                  path="admin/papers/edit/:id" 
-                  element={
-                    <AdminRoute>
-                      <Layout>
-                        <PaperEdit />
-                      </Layout>
-                    </AdminRoute>
-                  } 
-                />
-                
-                {/* Catch all route */}
-                <Route path="*" element={<NotFound />} />
-              </Route>
-            </Routes>
-          </Router>
-        </AuthProvider>
-      </SnackbarProvider>
+                {/* Public Routes */}
+                <Route path="/" element={<Layout />}>
+                  <Route index element={<Home />} />
+                  <Route path="papers/:id" element={<PaperDetails />} />
+                  <Route path="search" element={<Search />} />
+                  <Route path="search-results" element={<SearchResults />} />
+                  <Route path="subjects/:year/:semester" element={<Subjects />} />
+                  
+                  {/* Protected Routes */}
+                  <Route 
+                    path="profile" 
+                    element={
+                      <ProtectedRoute>
+                        <Profile />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  
+                  {/* Admin Routes */}
+                  <Route 
+                    path="admin" 
+                    element={
+                      <AdminRoute>
+                        <AdminDashboard />
+                      </AdminRoute>
+                    } 
+                  />
+                  
+                  <Route 
+                    path="admin/papers/edit/:id" 
+                    element={
+                      <AdminRoute>
+                        <Layout>
+                          <PaperEdit />
+                        </Layout>
+                      </AdminRoute>
+                    } 
+                  />
+                  
+                  {/* Catch all route */}
+                  <Route path="*" element={<NotFound />} />
+                </Route>
+              </Routes>
+            </Router>
+          </AuthProvider>
+        </SnackbarProvider>
+      </Box>
     </ThemeProvider>
   );
 }

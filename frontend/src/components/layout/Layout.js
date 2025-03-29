@@ -2,11 +2,10 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Box, Container } from '@mui/material';
 import Header from './Header';
-import Footer from './Footer';
 
 /**
  * Layout component that wraps the application content
- * Provides consistent structure with header, main content area, and footer
+ * Provides consistent structure with header and main content area
  */
 const Layout = () => {
   return (
@@ -23,9 +22,6 @@ const Layout = () => {
       }}>
         <Outlet />
       </Container>
-      
-      {/* Footer */}
-      <Footer />
     </Box>
   );
 };

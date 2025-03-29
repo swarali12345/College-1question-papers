@@ -9,7 +9,7 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { MenuBook as MenuBookIcon } from '@mui/icons-material';
+import { School as SchoolIcon } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { ROUTES, APP_NAME } from '../constants';
@@ -17,6 +17,7 @@ import FormField from '../components/common/FormField';
 import GoogleButton from '../components/common/GoogleButton';
 import { Email as EmailIcon, Lock as LockIcon, Login as LoginIcon } from '@mui/icons-material';
 import { styles } from '../styles/LoginStyles';
+import Header from '../components/layout/Header';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -31,6 +32,14 @@ const Login = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [formError, setFormError] = useState('');
   
+  // Remove the background styling effect that hides overflow
+  useEffect(() => {
+    // Clear errors when component unmounts
+    return () => {
+      clearError();
+    };
+  }, [clearError]);
+  
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
@@ -38,13 +47,6 @@ const Login = () => {
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, navigate, location]);
-  
-  // Clear errors when component unmounts
-  useEffect(() => {
-    return () => {
-      clearError();
-    };
-  }, [clearError]);
 
   const handleChange = (e) => {
     setFormData({
@@ -92,80 +94,97 @@ const Login = () => {
   };
 
   return (
-    <Box sx={styles.root}>
-      <Box sx={styles.mainContent}>
-        <Container maxWidth="xs">
-          <Paper elevation={3} sx={styles.paper}>
-            <MenuBookIcon sx={styles.loginIcon} />
-            <Typography component="h1" variant="h4" fontWeight="bold" sx={styles.title}>
-              Login
-            </Typography>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      {/* Header at the top of the page */}
+      <Box sx={{ position: 'sticky', top: 0, zIndex: 100 }}>
+        <Header />
+      </Box>
+      
+      {/* Main content with background and form */}
+      <Box 
+        sx={{
+          ...styles.root,
+          flexGrow: 1
+        }}
+      >
+        <Box sx={styles.mainContent}>
+          <Container maxWidth="xs">
+            <Paper elevation={3} sx={{
+              ...styles.paper,
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(10px)'
+            }}>
+              <SchoolIcon sx={styles.loginIcon} />
+              <Typography component="h1" variant="h4" fontWeight="bold" sx={styles.title}>
+                Login
+              </Typography>
 
-            {/* Show either API error or form validation error */}
-            {(error || formError) && (
-              <Alert severity="error" sx={styles.errorMessage}>
-                {error || formError}
-              </Alert>
-            )}
+              {/* Show either API error or form validation error */}
+              {(error || formError) && (
+                <Alert severity="error" sx={styles.errorMessage}>
+                  {error || formError}
+                </Alert>
+              )}
 
-            <Box component="form" onSubmit={handleSubmit} sx={styles.form}>
-              <FormField
-                name="email"
-                label="Email"
-                value={formData.email}
-                onChange={handleChange}
-                autoComplete="email"
-                autoFocus
-                icon={EmailIcon}
-              />
-              <FormField
-                name="password"
-                label="Password"
-                type={showPassword ? 'text' : 'password'}
-                value={formData.password}
-                onChange={handleChange}
-                autoComplete="current-password"
-                icon={LockIcon}
-                showPassword={showPassword}
-                onTogglePassword={() => setShowPassword(!showPassword)}
-              />
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                disabled={loading}
-                sx={styles.submitButton}
-                startIcon={loading ? <CircularProgress size={20} /> : <LoginIcon />}
-              >
-                {loading ? 'Please wait...' : 'Login'}
-              </Button>
-              
-              <Divider sx={styles.divider}>
-                <Typography variant="body2" color="text.secondary">
-                  OR
-                </Typography>
-              </Divider>
-              
-              <GoogleButton 
-                onClick={handleGoogleLogin}
-                loading={googleLoading}
-                disabled={loading}
-              />
+              <Box component="form" onSubmit={handleSubmit} sx={styles.form}>
+                <FormField
+                  name="email"
+                  label="Email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  autoComplete="email"
+                  autoFocus
+                  icon={EmailIcon}
+                />
+                <FormField
+                  name="password"
+                  label="Password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={handleChange}
+                  autoComplete="current-password"
+                  icon={LockIcon}
+                  showPassword={showPassword}
+                  onTogglePassword={() => setShowPassword(!showPassword)}
+                />
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  disabled={loading}
+                  sx={styles.submitButton}
+                  startIcon={loading ? <CircularProgress size={20} /> : <LoginIcon />}
+                >
+                  {loading ? 'Please wait...' : 'Login'}
+                </Button>
+                
+                <Divider sx={styles.divider}>
+                  <Typography variant="body2" color="text.secondary">
+                    OR
+                  </Typography>
+                </Divider>
+                
+                <GoogleButton 
+                  onClick={handleGoogleLogin}
+                  loading={googleLoading}
+                  disabled={loading}
+                />
 
-              <Box sx={styles.registerBox}>
-                <Typography variant="body2" sx={styles.secondaryText}>
-                  New user?{' '}
-                  <Button
-                    onClick={() => navigate(ROUTES.REGISTER)}
-                    sx={styles.registerButton}
-                  >
-                    Register
-                  </Button>
-                </Typography>
+                <Box sx={styles.registerBox}>
+                  <Typography variant="body2" sx={styles.secondaryText}>
+                    New user?{' '}
+                    <Button
+                      onClick={() => navigate(ROUTES.REGISTER)}
+                      sx={styles.registerButton}
+                    >
+                      Register
+                    </Button>
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
-          </Paper>
-        </Container>
+            </Paper>
+          </Container>
+        </Box>
       </Box>
     </Box>
   );

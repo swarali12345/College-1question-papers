@@ -20,7 +20,6 @@ import {
 import {
   Search as SearchIcon,
   School as SchoolIcon,
-  MenuBook as MenuBookIcon,
   LocalLibrary as LocalLibraryIcon,
   EmojiObjects as EmojiObjectsIcon,
   Speed as SpeedIcon,
@@ -29,7 +28,7 @@ import homeStyles from '../styles/HomeStyles';
 
 // Statistics data
 const stats = [
-  { icon: <MenuBookIcon fontSize="large" />, value: '10,000+', label: 'Past Papers' },
+  { icon: <SchoolIcon fontSize="large" />, value: '10,000+', label: 'Past Papers' },
   { icon: <SchoolIcon fontSize="large" />, value: '100+', label: 'Universities' },
   { icon: <LocalLibraryIcon fontSize="large" />, value: '20+', label: 'Subjects' },
   { icon: <EmojiObjectsIcon fontSize="large" />, value: '98%', label: 'Success Rate' },
@@ -67,7 +66,7 @@ const Home = () => {
                 <Avatar 
                   sx={homeStyles.logoAvatar}
                 >
-                  <MenuBookIcon sx={{ fontSize: 40 }} />
+                  <SchoolIcon sx={{ fontSize: 40 }} />
                 </Avatar>
               </Box>
             </Fade>
@@ -87,14 +86,14 @@ const Home = () => {
                   color: 'transparent',
                 }}
               >
-                PYQ-PAPERS
+                Previous Year Question Papers of SIT Nagpur
               </Typography>
             </Zoom>
             
             <Fade in={visible} timeout={1500} style={{ transitionDelay: '600ms' }}>
               <Box sx={homeStyles.taglineContainer}>
                 <Chip 
-                  label="Exam Success Made Simple" 
+                  label="We know exam season is really tough, hence we made it a bit easy for you" 
                   sx={homeStyles.tagChip}
                 />
                 <Typography
@@ -107,7 +106,7 @@ const Home = () => {
                     mt: 2,
                   }}
                 >
-                  We know exam season is really tough, hence we made it a bit easy for you
+                  
                 </Typography>
               </Box>
             </Fade>
@@ -137,7 +136,7 @@ const Home = () => {
                   component={RouterLink}
                   to="/search"
                 >
-                  Search
+                  Find Papers
                 </Button>
               </Paper>
             </Fade>

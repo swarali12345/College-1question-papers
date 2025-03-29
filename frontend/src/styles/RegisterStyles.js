@@ -1,9 +1,16 @@
+import backgroundImage from '../assets/newCroppedBg.jpg';
+
 export const styles = {
   root: {
     minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
-    bgcolor: 'background.default'
+    width: '100%',
+    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url(${backgroundImage})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    backgroundAttachment: 'fixed',
   },
   appBar: {
     bgcolor: 'primary.main'
@@ -31,43 +38,49 @@ export const styles = {
     py: 1.5
   },
   mainContent: {
-    flex: 1,
+    flexGrow: 1,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    py: { xs: 2, sm: 4 },
+    py: { xs: 4, sm: 6 },
     px: { xs: 2, sm: 0 },
   },
   paper: {
-    p: { xs: 3, sm: 4 },
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    backgroundColor: 'background.paper',
+    p: { xs: 3, sm: 3.5 },
+    maxWidth: '400px',
+    width: '100%',
+    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+    backdropFilter: 'blur(8px)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 2,
-    boxShadow: (theme) => `0 3px 15px 2px ${theme.palette.primary.main}1a`,
-    transition: 'transform 0.2s ease-in-out',
-    '&:hover': {
-      transform: { xs: 'none', sm: 'translateY(-5px)' },
-      boxShadow: (theme) => `0 5px 20px 4px ${theme.palette.primary.main}26`,
+    position: 'relative',
+    overflow: 'hidden',
+    '&:before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '4px',
+      backgroundColor: 'primary.main',
     },
-    borderTop: '4px solid',
-    borderTopColor: 'primary.main',
-    width: '100%'
   },
   registerIcon: {
     color: 'primary.main',
-    fontSize: { xs: 40, sm: 45 },
-    mb: { xs: 1, sm: 2 },
+    fontSize: { xs: 36, sm: 40 },
+    mb: 1.5,
     p: 1,
     borderRadius: '50%',
     backgroundColor: (theme) => `${theme.palette.primary.main}1a`,
   },
   title: {
-    mb: { xs: 2, sm: 4 },
+    mb: 2.5,
     color: 'primary.main',
     fontWeight: 'bold',
-    fontSize: { xs: '1.5rem', sm: '2rem' },
+    fontSize: { xs: '1.4rem', sm: '1.6rem' },
     textAlign: 'center',
     lineHeight: 1.2,
   },
@@ -79,12 +92,12 @@ export const styles = {
     width: '100%',
     textAlign: 'center',
     border: '1px solid #ffcdd2',
-    fontSize: { xs: '0.875rem', sm: '1rem' },
+    fontSize: '0.875rem',
   },
   form: {
     width: '100%',
-    '& .MuiTextField-root': { mb: 2.5 },
-    mt: { xs: 1, sm: 2 },
+    '& .MuiTextField-root': { mb: 1.5 },
+    mt: 1,
   },
   textField: {
     '& .MuiOutlinedInput-root': {
@@ -100,16 +113,16 @@ export const styles = {
     },
   },
   submitButton: {
-    mt: 2,
+    mt: 1.5,
     mb: 2,
     bgcolor: 'primary.main',
     '&:hover': {
       bgcolor: 'primary.dark',
     },
-    py: { xs: 1.2, sm: 1.5 },
-    fontSize: { xs: '0.9rem', sm: '1rem' },
+    py: 1.25,
+    fontSize: '0.95rem',
     fontWeight: 'bold',
-    boxShadow: (theme) => `0 2px 4px ${theme.palette.primary.main}40`,
+    boxShadow: (theme) => `0 2px 8px ${theme.palette.primary.main}40`,
     transition: 'all 0.3s ease',
     '&:active': {
       transform: 'scale(0.98)',
@@ -117,15 +130,17 @@ export const styles = {
   },
   loginBox: {
     textAlign: 'center',
-    p: { xs: 1.5, sm: 2 },
-    mt: { xs: 2, sm: 3 },
-    bgcolor: '#f8f8f8',
+    p: 1.5,
+    mt: 2,
+    bgcolor: 'rgba(248, 248, 248, 0.8)',
     borderRadius: 1,
     border: '1px solid #eee',
   },
   loginButton: {
     color: 'primary.main',
     fontWeight: 'bold',
+    p: 0,
+    ml: 0.5,
     '&:hover': {
       bgcolor: 'transparent',
       textDecoration: 'underline',
@@ -136,10 +151,10 @@ export const styles = {
   },
   secondaryText: {
     color: 'text.secondary',
-    fontSize: { xs: '0.875rem', sm: '1rem' },
+    fontSize: '0.875rem',
   },
   divider: {
-    my: { xs: 1.5, sm: 2 },
+    my: 1.5,
     width: '100%',
   },
 }; 

@@ -31,7 +31,7 @@ import {
   Logout as LogoutIcon,
   AdminPanelSettings as AdminIcon,
   Home as HomeIcon,
-  MenuBook as MenuBookIcon,
+  School as SchoolIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES, APP_NAME } from '../../constants';
@@ -112,7 +112,7 @@ const Header = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`${ROUTES.SEARCH}?query=${encodeURIComponent(searchQuery)}`);
+      navigate(`${ROUTES.SEARCH_RESULTS}?query=${encodeURIComponent(searchQuery)}`);
       setSearchQuery('');
     }
   };
@@ -136,7 +136,7 @@ const Header = () => {
       onKeyDown={toggleDrawer(false)}
     >
       <Box sx={{ p: 2, display: 'flex', alignItems: 'center' }}>
-        <MenuBookIcon sx={{ mr: 1, color: 'primary.main' }} />
+        <SchoolIcon sx={{ mr: 1, color: 'primary.main' }} />
         <Typography variant="h6" color="primary" fontWeight="bold">
           {APP_NAME}
         </Typography>
@@ -168,7 +168,7 @@ const Header = () => {
             <ListItemIcon>
               <SearchIcon />
             </ListItemIcon>
-            <ListItemText primary="Search Papers" />
+            <ListItemText primary="Papers" />
           </ListItemButton>
         </ListItem>
       </List>
@@ -228,7 +228,7 @@ const Header = () => {
           </IconButton>
           
           {/* Logo and title - desktop */}
-          <MenuBookIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, fontSize: 30 }} />
+          <SchoolIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, fontSize: 30 }} />
           <Typography
             variant="h6"
             noWrap
@@ -248,7 +248,7 @@ const Header = () => {
           </Typography>
           
           {/* Logo and title - mobile */}
-          <MenuBookIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1, fontSize: 28 }} />
+          <SchoolIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1, fontSize: 28 }} />
           <Typography
             variant="h6"
             noWrap
@@ -272,17 +272,19 @@ const Header = () => {
             <Button
               component={RouterLink}
               to={ROUTES.HOME}
-              sx={{ my: 2, color: 'white', display: 'block' }}
+              sx={{ my: 2, color: 'white', display: 'block', mx: 1 }}
             >
               Home
             </Button>
+            
             <Button
               component={RouterLink}
               to={ROUTES.SEARCH}
-              sx={{ my: 2, color: 'white', display: 'block' }}
+              sx={{ my: 2, color: 'white', display: 'block', mx: 1 }}
             >
               Papers
             </Button>
+            
             {isAdmin && (
               <Button
                 component={RouterLink}
