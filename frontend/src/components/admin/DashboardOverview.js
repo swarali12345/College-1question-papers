@@ -16,13 +16,12 @@ import {
   Button
 } from '@mui/material';
 import {
-  FileCopy as FileIcon,
   Person as PersonIcon,
   Description as DescriptionIcon,
-  ThumbUp as ThumbUpIcon,
-  CloudUpload as UploadIcon
+  CloudUpload as UploadIcon,
+  ArrowForward as ArrowForwardIcon
 } from '@mui/icons-material';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { Link as RouterLink } from 'react-router-dom';
 import { paperService, userService } from '../../services/adminService';
 import Chart from 'react-apexcharts';
@@ -59,14 +58,10 @@ const DashboardOverview = () => {
   const [error, setError] = useState('');
   const [stats, setStats] = useState({
     totalPapers: 0,
-    approvedPapers: 0,
-    pendingPapers: 0,
     totalUsers: 0,
-    totalDownloads: 0,
     totalViews: 0,
     recentPapers: [],
     topPapers: [],
-    departmentStats: [],
     monthlyUploads: []
   });
 
@@ -82,17 +77,33 @@ const DashboardOverview = () => {
         // Fetch user stats
         const userStats = await userService.getUserStats();
         
+        // Create monthly stats if not available
+        let processedMonthlyStats = paperStats.monthlyUploads || [];
+        if (!processedMonthlyStats.length && paperStats.papers) {
+          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const monthCounts = Array(12).fill(0);
+          
+          paperStats.papers.forEach(paper => {
+            if (paper.createdAt) {
+              const date = new Date(paper.createdAt);
+              const month = date.getMonth();
+              monthCounts[month]++;
+            }
+          });
+          
+          processedMonthlyStats = months.map((month, index) => ({
+            month,
+            count: monthCounts[index]
+          }));
+        }
+        
         setStats({
           totalPapers: paperStats.totalPapers || 0,
-          approvedPapers: paperStats.approvedPapers || 0,
-          pendingPapers: paperStats.pendingPapers || 0,
           totalUsers: userStats.totalUsers || 0,
-          totalDownloads: paperStats.totalDownloads || 0,
           totalViews: paperStats.totalViews || 0,
           recentPapers: paperStats.recentPapers || [],
           topPapers: paperStats.topPapers || [],
-          departmentStats: paperStats.departmentStats || [],
-          monthlyUploads: paperStats.monthlyUploads || []
+          monthlyUploads: processedMonthlyStats
         });
       } catch (err) {
         console.error('Error fetching dashboard stats:', err);
@@ -104,41 +115,6 @@ const DashboardOverview = () => {
     
     fetchStats();
   }, []);
-
-  const chartOptions = {
-    chart: {
-      id: 'department-papers',
-      toolbar: {
-        show: false
-      }
-    },
-    xaxis: {
-      categories: stats.departmentStats.map(item => item.department)
-    },
-    colors: ['#4caf50'],
-    plotOptions: {
-      bar: {
-        borderRadius: 4,
-        dataLabels: {
-          position: 'top'
-        }
-      }
-    },
-    dataLabels: {
-      enabled: true,
-      offsetY: -20,
-      style: {
-        fontSize: '12px'
-      }
-    },
-    title: {
-      text: 'Papers by Department',
-      align: 'center',
-      style: {
-        fontSize: '16px'
-      }
-    }
-  };
 
   const uploadsTrendOptions = {
     chart: {
@@ -193,6 +169,14 @@ const DashboardOverview = () => {
     );
   }
 
+  const formatDate = (dateString) => {
+    try {
+      return format(new Date(dateString), 'MMM d, yyyy');
+    } catch (e) {
+      return 'Unknown date';
+    }
+  };
+
   return (
     <Box>
       <Typography variant="h6" component="h2" gutterBottom>
@@ -201,7 +185,7 @@ const DashboardOverview = () => {
       
       {/* Stats Cards */}
       <Grid container spacing={3} mb={4}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6}>
           <StatCard 
             title="Total Papers" 
             value={stats.totalPapers} 
@@ -209,15 +193,7 @@ const DashboardOverview = () => {
             color="#3f51b5" 
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard 
-            title="Pending Approvals" 
-            value={stats.pendingPapers} 
-            icon={<FileIcon />} 
-            color="#f44336" 
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6}>
           <StatCard 
             title="Total Users" 
             value={stats.totalUsers} 
@@ -225,40 +201,11 @@ const DashboardOverview = () => {
             color="#9c27b0" 
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard 
-            title="Total Downloads" 
-            value={stats.totalDownloads} 
-            icon={<ThumbUpIcon />} 
-            color="#4caf50" 
-          />
-        </Grid>
       </Grid>
       
       {/* Charts */}
       <Grid container spacing={3} mb={4}>
-        <Grid item xs={12} md={6}>
-          {stats.departmentStats.length > 0 ? (
-            <Paper sx={{ p: 2 }}>
-              <Chart 
-                options={chartOptions} 
-                series={[{
-                  name: 'Papers',
-                  data: stats.departmentStats.map(item => item.count)
-                }]} 
-                type="bar" 
-                height={350} 
-              />
-            </Paper>
-          ) : (
-            <Paper sx={{ p: 3, height: 350, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography variant="body1" color="text.secondary">
-                No department data available
-              </Typography>
-            </Paper>
-          )}
-        </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12}>
           {stats.monthlyUploads.length > 0 ? (
             <Paper sx={{ p: 2 }}>
               <Chart 
@@ -272,96 +219,95 @@ const DashboardOverview = () => {
               />
             </Paper>
           ) : (
-            <Paper sx={{ p: 3, height: 350, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography variant="body1" color="text.secondary">
-                No monthly upload data available
+            <Paper sx={{ p: 3, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <Typography color="text.secondary">
+                No monthly data available
               </Typography>
             </Paper>
           )}
         </Grid>
       </Grid>
       
-      {/* Recent & Top Papers */}
+      {/* Recent Papers */}
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2, height: '100%' }}>
-            <Typography variant="h6" gutterBottom>
-              Recent Uploads
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            {stats.recentPapers.length > 0 ? (
-              <List>
-                {stats.recentPapers.map((paper) => (
-                  <ListItem key={paper.id} divider>
-                    <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: 'primary.main' }}>
-                        <DescriptionIcon />
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={paper.title}
-                      secondary={
-                        <>
-                          {paper.subject} | {format(new Date(paper.createdAt), 'dd MMM yyyy')}
-                          <Box display="flex" mt={0.5}>
+          <Paper sx={{ p: 0, overflow: 'hidden' }}>
+            <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'white' }}>
+              <Typography variant="h6">Recent Papers</Typography>
+            </Box>
+            {stats.recentPapers.length === 0 ? (
+              <Box p={3} textAlign="center">
+                <Typography color="text.secondary">No recent papers</Typography>
+              </Box>
+            ) : (
+              <List sx={{ p: 0 }}>
+                {stats.recentPapers.map((paper, index) => (
+                  <React.Fragment key={paper._id || index}>
+                    <ListItem>
+                      <ListItemAvatar>
+                        <Avatar sx={{ bgcolor: paper.approved ? 'success.main' : 'warning.main' }}>
+                          <DescriptionIcon />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText 
+                        primary={paper.title}
+                        secondary={
+                          <>
+                            {`${paper.subject || 'Unknown subject'} • ${formatDate(paper.createdAt)}`}
+                            <br />
                             <Chip 
+                              label={paper.approved ? 'Approved' : 'Pending'} 
                               size="small" 
-                              label={paper.status} 
-                              color={paper.status === 'approved' ? 'success' : 'warning'} 
-                              sx={{ mr: 1 }}
+                              color={paper.approved ? 'success' : 'warning'}
+                              sx={{ mt: 0.5 }}
                             />
-                          </Box>
-                        </>
-                      }
-                    />
-                  </ListItem>
+                          </>
+                        }
+                      />
+                    </ListItem>
+                    {index < stats.recentPapers.length - 1 && <Divider variant="inset" component="li" />}
+                  </React.Fragment>
                 ))}
               </List>
-            ) : (
-              <Typography variant="body1" color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>
-                No recent uploads
-              </Typography>
             )}
           </Paper>
         </Grid>
+        
+        {/* Top Papers */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2, height: '100%' }}>
-            <Typography variant="h6" gutterBottom>
-              Top Downloaded Papers
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            {stats.topPapers.length > 0 ? (
-              <List>
-                {stats.topPapers.map((paper) => (
-                  <ListItem key={paper.id} divider>
-                    <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: 'secondary.main' }}>
-                        <ThumbUpIcon />
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={paper.title}
-                      secondary={
-                        <>
-                          {paper.subject} | {paper.department}
-                          <Box display="flex" mt={0.5}>
-                            <Chip 
-                              size="small" 
-                              label={`${paper.downloads} downloads`} 
-                              color="primary" 
-                              variant="outlined"
-                            />
-                          </Box>
-                        </>
-                      }
-                    />
-                  </ListItem>
+          <Paper sx={{ p: 0, overflow: 'hidden' }}>
+            <Box sx={{ p: 2, bgcolor: 'success.main', color: 'white' }}>
+              <Typography variant="h6">Most Popular Papers</Typography>
+            </Box>
+            {stats.topPapers.length === 0 ? (
+              <Box p={3} textAlign="center">
+                <Typography color="text.secondary">No paper statistics available</Typography>
+              </Box>
+            ) : (
+              <List sx={{ p: 0 }}>
+                {stats.topPapers.map((paper, index) => (
+                  <React.Fragment key={paper._id || index}>
+                    <ListItem>
+                      <ListItemAvatar>
+                        <Avatar sx={{ bgcolor: 'primary.main' }}>
+                          {index + 1}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText 
+                        primary={paper.title}
+                        secondary={
+                          <>
+                            {`${paper.subject || 'Unknown subject'} • ${paper.department || 'Unknown department'}`}
+                            <br />
+                            {`${paper.views || 0} views`}
+                          </>
+                        }
+                      />
+                    </ListItem>
+                    {index < stats.topPapers.length - 1 && <Divider variant="inset" component="li" />}
+                  </React.Fragment>
                 ))}
               </List>
-            ) : (
-              <Typography variant="body1" color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>
-                No download data available
-              </Typography>
             )}
           </Paper>
         </Grid>

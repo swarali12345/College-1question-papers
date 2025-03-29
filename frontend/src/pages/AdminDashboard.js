@@ -67,13 +67,13 @@ const AdminDashboard = () => {
     setLoading(true);
     
     // Redirect non-admin users
-    if (user && user.role !== USER_ROLES.ADMIN) {
+    if (user && !user.isAdmin) {
       navigate('/');
       return;
     }
     
     // If authentication is complete and user is admin, proceed
-    if (user && user.role === USER_ROLES.ADMIN) {
+    if (user && user.isAdmin) {
       setLoading(false);
     }
     
@@ -135,7 +135,7 @@ const AdminDashboard = () => {
           Admin Dashboard
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Welcome back, {user?.name}! Manage your application content and users from this dashboard.
+          Welcome back, {user?.name}! 
         </Typography>
       </Paper>
       

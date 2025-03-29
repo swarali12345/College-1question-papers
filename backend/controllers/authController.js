@@ -274,7 +274,7 @@ const sendTokenResponse = (user, statusCode, res) => {
   // Remove password from output
   user.password = undefined;
 
-  res.status(statusCode).json({
+  const response = {
     success: true,
     token,
     user: {
@@ -285,5 +285,20 @@ const sendTokenResponse = (user, statusCode, res) => {
       department: user.department,
       profilePicture: user.profilePicture
     }
-  });
+  };
+  
+  // Add redirect information for admin users
+  if (user.isAdmin) {
+    response.redirect = {
+      path: '/admin',
+      isAdmin: true
+    };
+  } else {
+    response.redirect = {
+      path: '/dashboard',
+      isAdmin: false
+    };
+  }
+
+  res.status(statusCode).json(response);
 }; 

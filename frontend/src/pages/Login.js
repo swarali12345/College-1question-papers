@@ -69,10 +69,29 @@ const Login = () => {
     }
 
     try {
-      await login(formData);
+      console.log('Submitting login form:', { 
+        email: formData.email, 
+        passwordLength: formData.password?.length || 0 
+      });
+      
+      const result = await login(formData);
+      console.log('Login successful, redirecting user');
+      
+      // If we reach here, login was successful - the auth context will handle redirection
     } catch (err) {
       // Error is already set in the auth context
-      console.error('Login error:', err);
+      console.error('Login component error handler:', err);
+      
+      // Display a more user-friendly message based on the error
+      if (err.message && err.message.includes('internet connection')) {
+        setFormError('Unable to connect to the server. Please check your internet connection.');
+      } else if (err.message && err.message.includes('Invalid credentials')) {
+        setFormError('The email or password you entered is incorrect. Please try again.');
+      } else if (err.message) {
+        setFormError(err.message);
+      } else {
+        setFormError('Login failed. Please try again later.');
+      }
     }
   };
   

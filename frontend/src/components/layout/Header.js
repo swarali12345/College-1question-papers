@@ -18,9 +18,6 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
-  InputBase,
-  alpha,
-  styled,
   ListItemButton,
 } from '@mui/material';
 import {
@@ -39,53 +36,12 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { ROUTES, APP_NAME } from '../../constants';
 
-// Styled search bar component
-const Search = styled('div')(({ theme }) => ({
-  position: 'relative',
-  borderRadius: theme.shape.borderRadius,
-  backgroundColor: alpha(theme.palette.common.white, 0.15),
-  '&:hover': {
-    backgroundColor: alpha(theme.palette.common.white, 0.25),
-  },
-  marginRight: theme.spacing(2),
-  marginLeft: 0,
-  width: '100%',
-  [theme.breakpoints.up('sm')]: {
-    marginLeft: theme.spacing(3),
-    width: 'auto',
-  },
-}));
-
-const SearchIconWrapper = styled('div')(({ theme }) => ({
-  padding: theme.spacing(0, 2),
-  height: '100%',
-  position: 'absolute',
-  pointerEvents: 'none',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-}));
-
-const StyledInputBase = styled(InputBase)(({ theme }) => ({
-  color: 'inherit',
-  '& .MuiInputBase-input': {
-    padding: theme.spacing(1, 1, 1, 0),
-    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-    transition: theme.transitions.create('width'),
-    width: '100%',
-    [theme.breakpoints.up('md')]: {
-      width: '20ch',
-    },
-  },
-}));
-
 const Header = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
   
   const [anchorElUser, setAnchorElUser] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const handleOpenUserMenu = (event) => {
     setAnchorElUser(event.currentTarget);
@@ -110,14 +66,6 @@ const Header = () => {
       return;
     }
     setDrawerOpen(open);
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`${ROUTES.SEARCH_RESULTS}?query=${encodeURIComponent(searchQuery)}`);
-      setSearchQuery('');
-    }
   };
 
   // Get user's initials for avatar
@@ -304,21 +252,6 @@ const Header = () => {
               </Button>
             )}
           </Box>
-          
-          {/* Search bar */}
-          <Search>
-            <SearchIconWrapper>
-              <SearchIcon />
-            </SearchIconWrapper>
-            <form onSubmit={handleSearch}>
-              <StyledInputBase
-                placeholder="Search papers…"
-                inputProps={{ 'aria-label': 'search' }}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </form>
-          </Search>
           
           {/* User menu */}
           <Box sx={{ flexGrow: 0 }}>

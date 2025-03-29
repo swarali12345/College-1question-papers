@@ -5,16 +5,55 @@ export const authService = {
     try {
       console.log('Attempting login with:', { email, password });
       const response = await axios.post('/api/auth/login', { email, password });
-      console.log('Login response:', response.data);
-      if (response.data?.token) {
+      console.log('Login response full data:', response);
+      console.log('Login response data:', response.data);
+      
+      // Check if the response contains the expected data
+      if (!response.data || !response.data.success) {
+        throw new Error('Invalid response from server');
+      }
+      
+      // Store authentication data
+      if (response.data.token) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         localStorage.setItem('userRole', response.data.user.isAdmin ? 'admin' : 'user');
+        
+        // Store redirect information if available
+        if (response.data.redirect) {
+          localStorage.setItem('redirect', JSON.stringify(response.data.redirect));
+        }
+        
+        console.log('Auth data stored in localStorage:', { 
+          token: !!response.data.token,
+          user: !!response.data.user,
+          isAdmin: response.data.user?.isAdmin,
+          redirect: response.data.redirect
+        });
+      } else {
+        console.error('No token in login response:', response.data);
+        throw new Error('Login successful but no authentication token received');
       }
+      
       return response.data;
     } catch (error) {
-      console.error('Login error details:', error.response || error);
-      throw error.response?.data || { message: 'Login failed' };
+      console.error('Login error details:', error);
+      
+      // Extract meaningful error message
+      let errorMessage = 'Login failed';
+      
+      if (error.response) {
+        console.error('Server response error:', error.response.data);
+        errorMessage = error.response.data.message || 'Server error during login';
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        errorMessage = 'No response from server. Please check your internet connection.';
+      } else {
+        console.error('Error setting up request:', error.message);
+        errorMessage = error.message;
+      }
+      
+      throw { message: errorMessage };
     }
   },
 

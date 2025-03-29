@@ -63,17 +63,56 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('AuthContext login with:', credentials);
       const { email, password } = credentials; 
-      const data = await authService.login(email, password);
-      setUser(data.user);
       
-      // Redirect to the search page after successful login
-      navigate(ROUTES.SEARCH);
+      // Validate credentials before sending to API
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
+      
+      // Call the auth service login method
+      const data = await authService.login(email, password);
+      
+      // Log authentication data received
+      console.log('Login successful, user data:', { 
+        id: data.user?.id,
+        name: data.user?.name,
+        isAdmin: data.user?.isAdmin,
+        hasToken: !!data.token,
+        tokenLength: data.token?.length,
+        redirect: data.redirect
+      });
+      
+      if (!data.user) {
+        throw new Error('User data missing from login response');
+      }
+      
+      // Set the authenticated user in state
+      setUser(data.user);
+
+      // Handle redirect path from backend response
+      if (data.redirect && data.redirect.path) {
+        console.log('Redirecting to:', data.redirect.path);
+        navigate(data.redirect.path);
+      } else {
+        // Fallback redirect if redirect info is missing
+        navigate(data.user.isAdmin ? '/admin' : '/dashboard');
+      }
       
       return data.user;
     } catch (error) {
-      const errorMessage = error.message || 'Login failed';
+      console.error('Login error in AuthContext:', error);
+      
+      // Create user-friendly error message
+      let errorMessage = 'Login failed';
+      
+      if (error.response) {
+        errorMessage = error.response.data?.message || 'Server error during login';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       setError(errorMessage);
-      throw new Error(errorMessage);
+      throw error; // Re-throw to let the component handle it
     } finally {
       setLoading(false);
     }

@@ -35,7 +35,9 @@ const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
       'http://localhost:3000',
-      'http://127.0.0.1:3000'
+      'http://127.0.0.1:3000',
+      'http://localhost:5173',  // Vite default port
+      'http://127.0.0.1:5173'
     ];
     
     // Add CLIENT_URL from environment if it exists
@@ -46,14 +48,16 @@ const corsOptions = {
     // Allow requests with no origin (like mobile apps, curl requests, etc.)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
       callback(null, true);
     } else {
+      console.warn('CORS blocked request from:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-access-token']
 };
 
 app.use(cors(corsOptions));

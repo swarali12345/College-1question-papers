@@ -44,65 +44,6 @@ import {
 import { format } from 'date-fns';
 import { userService } from '../../services/adminService';
 
-// Mock API service - replace with actual API calls
-const mockUsers = [
-  {
-    id: 'u1',
-    name: 'John Smith',
-    email: 'john.smith@example.com',
-    role: 'admin',
-    createdAt: new Date('2023-01-15'),
-    status: 'active',
-    lastLogin: new Date('2023-04-28'),
-    avatar: null,
-    department: 'Computer Science'
-  },
-  {
-    id: 'u2',
-    name: 'Jane Doe',
-    email: 'jane.doe@example.com',
-    role: 'user',
-    createdAt: new Date('2023-02-20'),
-    status: 'active',
-    lastLogin: new Date('2023-04-27'),
-    avatar: null,
-    department: 'Information Technology'
-  },
-  {
-    id: 'u3',
-    name: 'Michael Johnson',
-    email: 'michael.j@example.com',
-    role: 'moderator',
-    createdAt: new Date('2023-03-10'),
-    status: 'active',
-    lastLogin: new Date('2023-04-25'),
-    avatar: null,
-    department: 'Computer Science'
-  },
-  {
-    id: 'u4',
-    name: 'Emily Williams',
-    email: 'emily.w@example.com',
-    role: 'user',
-    createdAt: new Date('2023-03-15'),
-    status: 'blocked',
-    lastLogin: new Date('2023-04-10'),
-    avatar: null,
-    department: 'Electrical Engineering'
-  },
-  {
-    id: 'u5',
-    name: 'David Brown',
-    email: 'david.b@example.com',
-    role: 'user',
-    createdAt: new Date('2023-03-20'),
-    status: 'pending',
-    lastLogin: null,
-    avatar: null,
-    department: 'Information Technology'
-  }
-];
-
 const UsersList = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -172,10 +113,10 @@ const UsersList = () => {
     
     try {
       // Call the deleteUser method from userService
-      await userService.deleteUser(selectedUser.id);
+      await userService.deleteUser(selectedUser._id);
       
       // Update local state
-      setUsers(users.filter(u => u.id !== selectedUser.id));
+      setUsers(users.filter(u => u._id !== selectedUser._id));
       setDeleteDialogOpen(false);
       setSelectedUser(null);
       
@@ -195,14 +136,17 @@ const UsersList = () => {
     if (!selectedUser) return;
     
     try {
+      // Get current status (default to active if undefined)
+      const currentStatus = selectedUser.status || 'active';
+      const newStatus = currentStatus === 'blocked' ? 'active' : 'blocked';
+      
       // Call the updateUserStatus method from userService
-      await userService.updateUserStatus(selectedUser.id, 
-        selectedUser.status === 'blocked' ? 'active' : 'blocked');
+      await userService.updateUserStatus(selectedUser._id, newStatus);
       
       // Update local state
       setUsers(users.map(u => 
-        u.id === selectedUser.id 
-          ? { ...u, status: u.status === 'blocked' ? 'active' : 'blocked' } 
+        u._id === selectedUser._id 
+          ? { ...u, status: newStatus } 
           : u
       ));
       setBlockDialogOpen(false);
@@ -235,130 +179,89 @@ const UsersList = () => {
     setCurrentUser(null);
   };
 
-  const handleRoleChange = async (role) => {
+  const handleRoleChange = async (isAdmin) => {
     if (!currentUser) return;
     
     try {
       // Call the updateUserRole method from userService
-      await userService.updateUserRole(currentUser.id, role);
+      await userService.updateUserRole(currentUser._id, isAdmin);
       
       // Update local state
       setUsers(users.map(u => 
-        u.id === currentUser.id ? { ...u, role } : u
+        u._id === currentUser._id ? { ...u, isAdmin } : u
       ));
       
-      // Show a success message (in a real app)
+      handleRoleMenuClose();
     } catch (err) {
       console.error('Error updating user role:', err);
       setError('Failed to update user role. Please try again.');
-    } finally {
-      handleRoleMenuClose();
     }
   };
 
-  const handleVerifyUser = async (user) => {
-    try {
-      // Call the updateUserStatus method from userService
-      await userService.updateUserStatus(user.id, 'active');
-      
-      // Update local state
-      setUsers(users.map(u => 
-        u.id === user.id ? { ...u, status: 'active' } : u
-      ));
-      
-      // Show a success message (in a real app)
-    } catch (err) {
-      console.error('Error verifying user:', err);
-      setError('Failed to verify user. Please try again.');
-    } finally {
-      handleActionMenuClose();
-    }
-  };
-
-  const handleSendEmail = (user) => {
-    // Implement email functionality
-    console.log(`Send email to ${user.email}`);
-    handleActionMenuClose();
-    // In a real app, this might open a dialog to compose an email
-  };
-
-  // Filter users based on search query, role filter, and status filter
+  // Filter users according to search, role, and status
   const filteredUsers = users.filter(user => {
-    // Apply role filter
-    if (roleFilter !== 'all' && user.role !== roleFilter) {
-      return false;
-    }
+    const matchesSearch = 
+      user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.department?.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // Apply status filter
-    if (statusFilter !== 'all' && user.status !== statusFilter) {
-      return false;
-    }
+    const matchesRole = 
+      roleFilter === 'all' || 
+      (roleFilter === 'admin' && user.isAdmin) || 
+      (roleFilter === 'user' && !user.isAdmin);
     
-    // Apply search filter (case insensitive)
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      user.name.toLowerCase().includes(searchLower) ||
-      user.email.toLowerCase().includes(searchLower) ||
-      (user.department && user.department.toLowerCase().includes(searchLower))
-    );
+    const matchesStatus = 
+      statusFilter === 'all' || 
+      (statusFilter === 'active' && (!user.status || user.status === 'active')) || 
+      (statusFilter === 'blocked' && user.status === 'blocked');
+    
+    return matchesSearch && matchesRole && matchesStatus;
   });
 
-  // Paginate filtered users
+  // Get paginated users
   const paginatedUsers = filteredUsers.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
 
-  const getRoleChipColor = (role) => {
-    switch (role) {
-      case 'admin':
-        return 'error';
-      case 'moderator':
-        return 'primary';
-      case 'user':
-      default:
-        return 'default';
-    }
+  const getRoleChipColor = (isAdmin) => {
+    if (isAdmin) return 'primary';
+    return 'default';
   };
 
   const getStatusChipColor = (status) => {
     switch (status) {
-      case 'active':
-        return 'success';
-      case 'pending':
-        return 'warning';
       case 'blocked':
         return 'error';
+      case 'pending':
+        return 'warning';
       default:
-        return 'default';
+        return 'success';
     }
   };
 
   const getInitials = (name) => {
+    if (!name) return '?';
     return name
       .split(' ')
-      .map(word => word[0])
+      .map(part => part[0])
       .join('')
-      .toUpperCase();
+      .toUpperCase()
+      .substring(0, 2);
   };
 
-  // Function to get color based on name (for avatar)
-  const stringToColor = (string) => {
-    let hash = 0;
-    for (let i = 0; i < string.length; i++) {
-      hash = string.charCodeAt(i) + ((hash << 5) - hash);
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Never';
+    try {
+      return format(new Date(dateString), 'MMM d, yyyy');
+    } catch (e) {
+      return 'Invalid date';
     }
-    let color = '#';
-    for (let i = 0; i < 3; i++) {
-      const value = (hash >> (i * 8)) & 0xff;
-      color += `00${value.toString(16)}`.slice(-2);
-    }
-    return color;
   };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="300px">
+      <Box display="flex" justifyContent="center" alignItems="center" my={4}>
         <CircularProgress />
       </Box>
     );
@@ -374,292 +277,227 @@ const UsersList = () => {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h6" component="h2">
-          Manage Users
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-        >
-          Export User Data
-        </Button>
-      </Box>
-
-      <Paper sx={{ mb: 3 }}>
-        <Box p={2} display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+      <Typography variant="h6" component="h2" gutterBottom>
+        Users Management
+      </Typography>
+      
+      {/* Search and filters */}
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Box display="flex" flexDirection="column" gap={2}>
           <TextField
-            placeholder="Search users..."
+            fullWidth
             variant="outlined"
-            size="small"
+            placeholder="Search users by name, email, or department"
             value={searchQuery}
             onChange={handleSearchChange}
-            sx={{ minWidth: 300 }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
                   <SearchIcon />
                 </InputAdornment>
-              ),
+              )
             }}
           />
           
-          <Box display="flex" gap={2}>
-            {/* Role Filters */}
+          <Box display="flex" gap={2} flexWrap="wrap">
             <Box>
-              <Typography variant="caption" display="block" gutterBottom>
-                Role
+              <Typography variant="body2" component="span" mr={1}>
+                Role:
               </Typography>
-              <Box display="flex" gap={1}>
-                <Chip 
-                  label="All" 
-                  onClick={() => handleRoleFilterChange('all')}
-                  color={roleFilter === 'all' ? 'primary' : 'default'}
-                  variant={roleFilter === 'all' ? 'filled' : 'outlined'}
-                  size="small"
-                />
-                <Chip 
-                  label="Admin" 
-                  onClick={() => handleRoleFilterChange('admin')}
-                  color={roleFilter === 'admin' ? 'error' : 'default'}
-                  variant={roleFilter === 'admin' ? 'filled' : 'outlined'}
-                  size="small"
-                />
-                <Chip 
-                  label="Moderator" 
-                  onClick={() => handleRoleFilterChange('moderator')}
-                  color={roleFilter === 'moderator' ? 'primary' : 'default'}
-                  variant={roleFilter === 'moderator' ? 'filled' : 'outlined'}
-                  size="small"
-                />
-                <Chip 
-                  label="User" 
-                  onClick={() => handleRoleFilterChange('user')}
-                  color={roleFilter === 'user' ? 'secondary' : 'default'}
-                  variant={roleFilter === 'user' ? 'filled' : 'outlined'}
-                  size="small"
-                />
-              </Box>
+              <Chip 
+                label="All" 
+                onClick={() => handleRoleFilterChange('all')} 
+                color={roleFilter === 'all' ? 'primary' : 'default'}
+                sx={{ mr: 1 }}
+              />
+              <Chip 
+                label="Admin" 
+                onClick={() => handleRoleFilterChange('admin')} 
+                color={roleFilter === 'admin' ? 'primary' : 'default'}
+                sx={{ mr: 1 }}
+              />
+              <Chip 
+                label="User" 
+                onClick={() => handleRoleFilterChange('user')} 
+                color={roleFilter === 'user' ? 'primary' : 'default'}
+              />
             </Box>
             
-            {/* Status Filters */}
             <Box>
-              <Typography variant="caption" display="block" gutterBottom>
-                Status
+              <Typography variant="body2" component="span" mr={1}>
+                Status:
               </Typography>
-              <Box display="flex" gap={1}>
-                <Chip 
-                  label="All" 
-                  onClick={() => handleStatusFilterChange('all')}
-                  color={statusFilter === 'all' ? 'primary' : 'default'}
-                  variant={statusFilter === 'all' ? 'filled' : 'outlined'}
-                  size="small"
-                />
-                <Chip 
-                  label="Active" 
-                  onClick={() => handleStatusFilterChange('active')}
-                  color={statusFilter === 'active' ? 'success' : 'default'}
-                  variant={statusFilter === 'active' ? 'filled' : 'outlined'}
-                  size="small"
-                />
-                <Chip 
-                  label="Pending" 
-                  onClick={() => handleStatusFilterChange('pending')}
-                  color={statusFilter === 'pending' ? 'warning' : 'default'}
-                  variant={statusFilter === 'pending' ? 'filled' : 'outlined'}
-                  size="small"
-                />
-                <Chip 
-                  label="Blocked" 
-                  onClick={() => handleStatusFilterChange('blocked')}
-                  color={statusFilter === 'blocked' ? 'error' : 'default'}
-                  variant={statusFilter === 'blocked' ? 'filled' : 'outlined'}
-                  size="small"
-                />
-              </Box>
+              <Chip 
+                label="All" 
+                onClick={() => handleStatusFilterChange('all')} 
+                color={statusFilter === 'all' ? 'primary' : 'default'}
+                sx={{ mr: 1 }}
+              />
+              <Chip 
+                label="Active" 
+                onClick={() => handleStatusFilterChange('active')} 
+                color={statusFilter === 'active' ? 'primary' : 'default'}
+                sx={{ mr: 1 }}
+              />
+              <Chip 
+                label="Blocked" 
+                onClick={() => handleStatusFilterChange('blocked')} 
+                color={statusFilter === 'blocked' ? 'primary' : 'default'}
+              />
             </Box>
           </Box>
         </Box>
       </Paper>
-
-      <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 650 }}>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: 'action.hover' }}>
-              <TableCell>User</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Department</TableCell>
-              <TableCell>Role</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Joined</TableCell>
-              <TableCell>Last Login</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {paginatedUsers.length > 0 ? (
-              paginatedUsers.map((user) => (
-                <TableRow key={user.id} hover>
-                  <TableCell>
-                    <Box display="flex" alignItems="center">
-                      <Avatar 
-                        sx={{ 
-                          bgcolor: stringToColor(user.name),
-                          width: 32, 
-                          height: 32,
-                          marginRight: 1
-                        }}
-                      >
-                        {getInitials(user.name)}
-                      </Avatar>
-                      <Typography variant="body2">
-                        {user.name}
-                      </Typography>
-                    </Box>
+      
+      {/* Users Table */}
+      <Paper>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>User</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Role</TableCell>
+                <TableCell>Department</TableCell>
+                <TableCell>Joined</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {paginatedUsers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} align="center">
+                    No users found
                   </TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.department || '-'}</TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={user.role.charAt(0).toUpperCase() + user.role.slice(1)} 
-                      size="small" 
-                      color={getRoleChipColor(user.role)}
-                      onClick={(e) => handleRoleMenuOpen(e, user)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={user.status.charAt(0).toUpperCase() + user.status.slice(1)} 
-                      size="small" 
-                      color={getStatusChipColor(user.status)}
-                    />
-                  </TableCell>
-                  <TableCell>{format(user.createdAt, 'dd MMM yyyy')}</TableCell>
-                  <TableCell>
-                    {user.lastLogin 
-                      ? format(user.lastLogin, 'dd MMM yyyy')
-                      : 'Never'
-                    }
-                  </TableCell>
-                  <TableCell align="right">
-                    <Box>
-                      <Tooltip title="More Actions">
+                </TableRow>
+              ) : (
+                paginatedUsers.map(user => (
+                  <TableRow key={user._id} hover>
+                    <TableCell>
+                      <Box display="flex" alignItems="center">
+                        <Avatar 
+                          src={user.profilePicture} 
+                          sx={{ 
+                            mr: 2,
+                            bgcolor: user.profilePicture ? 'transparent' : '#1976d2'
+                          }}
+                        >
+                          {!user.profilePicture && getInitials(user.name)}
+                        </Avatar>
+                        <Typography variant="body1">{user.name || 'Unknown'}</Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={user.isAdmin ? 'Admin' : 'User'} 
+                        color={getRoleChipColor(user.isAdmin)}
+                        size="small"
+                        icon={user.isAdmin ? <AdminIcon /> : <UserIcon />}
+                      />
+                    </TableCell>
+                    <TableCell>{user.department || 'Not set'}</TableCell>
+                    <TableCell>{formatDate(user.createdAt)}</TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={user.status || 'Active'} 
+                        color={getStatusChipColor(user.status)}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="Actions">
                         <IconButton 
-                          size="small" 
                           onClick={(e) => handleActionMenuOpen(e, user)}
+                          size="small"
                         >
                           <MoreIcon />
                         </IconButton>
                       </Tooltip>
-                      {user.status === 'active' ? (
-                        <Tooltip title="Block User">
-                          <IconButton 
-                            size="small" 
-                            color="error"
-                            onClick={() => handleBlockClick(user)}
-                          >
-                            <BlockIcon />
-                          </IconButton>
-                        </Tooltip>
-                      ) : user.status === 'blocked' ? (
-                        <Tooltip title="Unblock User">
-                          <IconButton 
-                            size="small" 
-                            color="success"
-                            onClick={() => handleBlockClick(user)}
-                          >
-                            <VerifyIcon />
-                          </IconButton>
-                        </Tooltip>
-                      ) : user.status === 'pending' ? (
-                        <Tooltip title="Verify User">
-                          <IconButton 
-                            size="small" 
-                            color="success"
-                            onClick={() => handleVerifyUser(user)}
-                          >
-                            <VerifyIcon />
-                          </IconButton>
-                        </Tooltip>
-                      ) : null}
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={8} align="center">
-                  <Typography variant="body1" py={3}>
-                    {searchQuery || roleFilter !== 'all' || statusFilter !== 'all'
-                      ? 'No users match your search criteria.' 
-                      : 'No users available.'}
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
           component="div"
           count={filteredUsers.length}
-          rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[5, 10, 25, 50]}
         />
-      </TableContainer>
-
-      {/* Role Selection Menu */}
+      </Paper>
+      
+      {/* Role change menu */}
       <Menu
         anchorEl={roleMenuAnchor}
         open={Boolean(roleMenuAnchor)}
         onClose={handleRoleMenuClose}
       >
-        <MenuItem onClick={() => handleRoleChange('admin')}>
+        <MenuItem onClick={() => handleRoleChange(true)}>
           <ListItemIcon>
-            <AdminIcon fontSize="small" color="error" />
+            <AdminIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Admin</ListItemText>
+          <ListItemText>Make Admin</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleRoleChange('moderator')}>
-          <ListItemIcon>
-            <ModeratorIcon fontSize="small" color="primary" />
-          </ListItemIcon>
-          <ListItemText>Moderator</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => handleRoleChange('user')}>
+        <MenuItem onClick={() => handleRoleChange(false)}>
           <ListItemIcon>
             <UserIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Regular User</ListItemText>
+          <ListItemText>Make Regular User</ListItemText>
         </MenuItem>
       </Menu>
-
-      {/* Action Menu */}
+      
+      {/* Action menu */}
       <Menu
         anchorEl={actionMenuAnchor}
         open={Boolean(actionMenuAnchor)}
         onClose={handleActionMenuClose}
       >
-        <MenuItem onClick={() => handleSendEmail(currentUser)}>
+        <MenuItem onClick={() => {
+          handleRoleMenuOpen(actionMenuAnchor, currentUser);
+          handleActionMenuClose();
+        }}>
           <ListItemIcon>
-            <EmailIcon fontSize="small" />
+            <EditIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Send Email</ListItemText>
+          <ListItemText>Change Role</ListItemText>
         </MenuItem>
         <MenuItem onClick={() => {
+          handleBlockClick(currentUser);
           handleActionMenuClose();
+        }}>
+          <ListItemIcon>
+            {currentUser?.status === 'blocked' ? (
+              <VerifyIcon fontSize="small" />
+            ) : (
+              <BlockIcon fontSize="small" />
+            )}
+          </ListItemIcon>
+          <ListItemText>
+            {currentUser?.status === 'blocked' ? 'Unblock User' : 'Block User'}
+          </ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => {
           handleDeleteClick(currentUser);
+          handleActionMenuClose();
         }}>
           <ListItemIcon>
             <DeleteIcon fontSize="small" color="error" />
           </ListItemIcon>
-          <ListItemText>Delete User</ListItemText>
+          <ListItemText primaryTypographyProps={{ color: 'error' }}>
+            Delete User
+          </ListItemText>
         </MenuItem>
       </Menu>
-
-      {/* Delete Confirmation Dialog */}
+      
+      {/* Delete confirmation dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
@@ -667,18 +505,23 @@ const UsersList = () => {
         <DialogTitle>Delete User</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete the user "{selectedUser?.name}" with email "{selectedUser?.email}"? This action cannot be undone.
+            Are you sure you want to delete the user "{selectedUser?.name}"? 
+            This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+          <Button 
+            onClick={handleDeleteConfirm} 
+            color="error"
+            variant="contained"
+          >
             Delete
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Block/Unblock Confirmation Dialog */}
+      
+      {/* Block/unblock confirmation dialog */}
       <Dialog
         open={blockDialogOpen}
         onClose={() => setBlockDialogOpen(false)}
@@ -688,17 +531,16 @@ const UsersList = () => {
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            {selectedUser?.status === 'blocked'
-              ? `Are you sure you want to unblock the user "${selectedUser?.name}"? They will regain access to the platform.`
-              : `Are you sure you want to block the user "${selectedUser?.name}"? They will no longer be able to access the platform.`
-            }
+            {selectedUser?.status === 'blocked' 
+              ? `Are you sure you want to unblock the user "${selectedUser?.name}"?` 
+              : `Are you sure you want to block the user "${selectedUser?.name}"? They will not be able to login.`}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setBlockDialogOpen(false)}>Cancel</Button>
           <Button 
             onClick={handleBlockConfirm} 
-            color={selectedUser?.status === 'blocked' ? 'success' : 'error'} 
+            color={selectedUser?.status === 'blocked' ? 'primary' : 'error'}
             variant="contained"
           >
             {selectedUser?.status === 'blocked' ? 'Unblock' : 'Block'}

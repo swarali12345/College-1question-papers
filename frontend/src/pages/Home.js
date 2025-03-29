@@ -117,7 +117,7 @@ const Home = () => {
               <Paper elevation={0} sx={homeStyles.searchBar}>
                 <TextField
                   fullWidth
-                  placeholder="Search by Year, Semester and Subject"
+                  placeholder="Search by Year and Semester"
                   variant="standard"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
