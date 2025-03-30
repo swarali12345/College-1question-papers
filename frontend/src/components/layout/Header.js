@@ -112,14 +112,16 @@ const Header = () => {
           </ListItemButton>
         </ListItem>
 
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => navigate('/feedback')}>
-            <ListItemIcon>
-              <FeedbackIcon />
-            </ListItemIcon>
-            <ListItemText primary="Feedback" />
-          </ListItemButton>
-        </ListItem>
+        {!isAdmin && (
+          <ListItem disablePadding>
+            <ListItemButton onClick={() => navigate('/feedback')}>
+              <ListItemIcon>
+                <FeedbackIcon />
+              </ListItemIcon>
+              <ListItemText primary="Feedback" />
+            </ListItemButton>
+          </ListItem>
+        )}
       </List>
       
       {isAuthenticated && (
@@ -234,13 +236,15 @@ const Header = () => {
               Papers
             </Button>
 
-            <Button
-              component={RouterLink}
-              to="/feedback"
-              sx={{ my: 2, color: 'white', display: 'block', mx: 1 }}
-            >
-              Feedback
-            </Button>
+            {!isAdmin && (
+              <Button
+                component={RouterLink}
+                to="/feedback"
+                sx={{ my: 2, color: 'white', display: 'block', mx: 1 }}
+              >
+                Feedback
+              </Button>
+            )}
             
             {isAdmin && (
               <Button
