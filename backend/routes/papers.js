@@ -19,7 +19,7 @@ router.put('/:id/download', incrementDownload);
 
 // Protected routes
 router.post('/', protect, adminOnly, upload, createPaper);
-router.put('/:id', protect, adminOnly, updatePaper);
+router.put('/:id', protect, adminOnly, upload, updatePaper);
 router.delete('/:id', protect, adminOnly, deletePaper);
 router.get('/stats/overview', protect, adminOnly, getPaperStats);
 

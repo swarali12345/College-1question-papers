@@ -94,7 +94,7 @@ const Home = () => {
             <Fade in={visible} timeout={1500} style={{ transitionDelay: '600ms' }}>
               <Box sx={homeStyles.taglineContainer}>
                 <Chip 
-                  label="We know exam season is really tough, hence we made it a bit easy for you" 
+                  label="Exam season can be tough, so here's something to make it a little easier." 
                   sx={homeStyles.tagChip}
                 />
                 <Typography

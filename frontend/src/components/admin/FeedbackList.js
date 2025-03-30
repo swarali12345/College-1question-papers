@@ -308,7 +308,7 @@ const FeedbackList = () => {
 
   // Sort by date (newest first)
   const sortedFeedback = [...filteredFeedback].sort((a, b) => 
-    b.createdAt.getTime() - a.createdAt.getTime()
+    new Date(b.createdAt || Date.now()).getTime() - new Date(a.createdAt || Date.now()).getTime()
   );
 
   // Paginate filtered feedback
@@ -432,7 +432,7 @@ const FeedbackList = () => {
                     </Box>
                     
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      From {item.user.name} ({item.user.email}) - {format(item.createdAt, 'dd MMM yyyy')}
+                      From {item.user.name} ({item.user.email}) - {format(new Date(item.createdAt || Date.now()), 'dd MMM yyyy')}
                     </Typography>
                     
                     <Typography variant="body1" sx={{ mb: 2 }}>
@@ -588,7 +588,7 @@ const FeedbackList = () => {
                   </Box>
                 </TableCell>
                 <TableCell>
-                  {format(item.createdAt, 'dd MMM yyyy')}
+                  {format(new Date(item.createdAt || Date.now()), 'dd MMM yyyy')}
                 </TableCell>
                 <TableCell>
                   <Chip 

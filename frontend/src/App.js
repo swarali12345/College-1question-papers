@@ -26,6 +26,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import Search from './pages/Search';
 import Subjects from './pages/Subjects';
 import Feedback from './pages/Feedback';
+import UploadPaper from './pages/UploadPaper';
 
 // Route Guards
 import ProtectedRoute from './components/routing/ProtectedRoute';
@@ -86,9 +87,16 @@ function App() {
                     path="admin/papers/edit/:id" 
                     element={
                       <AdminRoute>
-                        <Layout>
-                          <PaperEdit />
-                        </Layout>
+                        <PaperEdit />
+                      </AdminRoute>
+                    } 
+                  />
+                  
+                  <Route 
+                    path="upload-paper" 
+                    element={
+                      <AdminRoute>
+                        <UploadPaper />
                       </AdminRoute>
                     } 
                   />

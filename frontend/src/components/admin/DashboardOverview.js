@@ -101,8 +101,8 @@ const DashboardOverview = () => {
           totalPapers: paperStats.totalPapers || 0,
           totalUsers: userStats.totalUsers || 0,
           totalViews: paperStats.totalViews || 0,
-          recentPapers: paperStats.recentPapers || [],
-          topPapers: paperStats.topPapers || [],
+          recentPapers: Array.isArray(paperStats.recentPapers) ? paperStats.recentPapers : [],
+          topPapers: Array.isArray(paperStats.topPapers) ? paperStats.topPapers : [],
           monthlyUploads: processedMonthlyStats
         });
       } catch (err) {
@@ -235,7 +235,7 @@ const DashboardOverview = () => {
             <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'white' }}>
               <Typography variant="h6">Recent Papers</Typography>
             </Box>
-            {stats.recentPapers.length === 0 ? (
+            {!Array.isArray(stats.recentPapers) || stats.recentPapers.length === 0 ? (
               <Box p={3} textAlign="center">
                 <Typography color="text.secondary">No recent papers</Typography>
               </Box>
@@ -279,7 +279,7 @@ const DashboardOverview = () => {
             <Box sx={{ p: 2, bgcolor: 'success.main', color: 'white' }}>
               <Typography variant="h6">Most Popular Papers</Typography>
             </Box>
-            {stats.topPapers.length === 0 ? (
+            {!Array.isArray(stats.topPapers) || stats.topPapers.length === 0 ? (
               <Box p={3} textAlign="center">
                 <Typography color="text.secondary">No paper statistics available</Typography>
               </Box>

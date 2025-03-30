@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../constants';
+import api from '../../utils/axios';
 
 /**
  * User Feedback Service
@@ -16,29 +17,11 @@ export const userFeedbackService = {
    */
   submitFeedback: async (feedbackData) => {
     try {
-      // In a real implementation, this would be:
-      // const response = await axios.post(API_ENDPOINTS.FEEDBACK, feedbackData);
-      // return response.data;
-      
-      // Using mock response for development
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({ 
-            success: true, 
-            message: 'Feedback submitted successfully! Thank you for your input.',
-            data: {
-              id: `f${Math.floor(Math.random() * 1000)}`,
-              ...feedbackData,
-              createdAt: new Date(),
-              status: 'pending',
-              priority: feedbackData.rating > 3 ? 'high' : 'medium'
-            }
-          });
-        }, 800);
-      });
+      const response = await api.post('/api/feedback', feedbackData);
+      return response.data;
     } catch (error) {
       console.error('Error submitting feedback:', error);
-      throw error;
+      throw error.response?.data || { message: 'Failed to submit feedback' };
     }
   },
   
@@ -48,38 +31,11 @@ export const userFeedbackService = {
    */
   getUserFeedback: async () => {
     try {
-      // In a real implementation, this would be:
-      // const response = await axios.get(`${API_ENDPOINTS.FEEDBACK}/user`);
-      // return response.data;
-      
-      // Using mock response for development
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve([
-            {
-              id: 'f101',
-              subject: 'Website Suggestions',
-              message: 'I think the site navigation could be improved to make finding papers easier.',
-              rating: 4,
-              createdAt: new Date('2023-03-10'),
-              status: 'pending',
-              response: null
-            },
-            {
-              id: 'f102',
-              subject: 'Paper Upload Experience',
-              message: 'The paper upload feature works great, but it would be nice to have a preview before submitting.',
-              rating: 3,
-              createdAt: new Date('2023-02-15'),
-              status: 'resolved',
-              response: 'Thank you for your feedback! We are working on adding a preview feature in our next update.'
-            }
-          ]);
-        }, 800);
-      });
+      const response = await api.get('/api/feedback/me');
+      return response.data.data || [];
     } catch (error) {
       console.error('Error fetching user feedback:', error);
-      throw error;
+      throw error.response?.data || { message: 'Failed to fetch feedback' };
     }
   }
 }; 

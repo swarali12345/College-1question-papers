@@ -75,7 +75,19 @@ REACT_APP_API_URL=http://localhost:5000/api
 
 ### Backend (.env)
 ```
+<<<<<<< HEAD
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/sit-papers
 JWT_SECRET=your_jwt_secret
 ``` 
+=======
+MONGODB_URI=mongodb+srv://swaralilimaye60:StnfhbSiiam6q67b@cluster144.0ytesid.mongodb.net/?retryWrites=true&w=majority&appName=Cluster144
+JWT_SECRET=your_jwt_secret_key_here
+PORT=5000
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+EMAIL=swaralilimaye60@gmail.com
+PASSWORD=Swarali@1
+
+```
+>>>>>>> b8235eafbadb74aae19c58769c738c26db89e076

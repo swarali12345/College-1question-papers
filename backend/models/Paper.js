@@ -13,7 +13,12 @@ const PaperSchema = new mongoose.Schema({
   },
   department: {
     type: String,
-    required: [true, 'Department is required'],
+    trim: true,
+    default: 'Computer Science'
+  },
+  batch: {
+    type: String,
+    required: [true, 'Batch is required'],
     trim: true
   },
   year: {
@@ -29,7 +34,7 @@ const PaperSchema = new mongoose.Schema({
   examType: {
     type: String,
     required: [true, 'Exam type is required'],
-    enum: ['Mid-Semester', 'End-Semester', 'Quiz', 'Assignment']
+    enum: ['CA', 'Mid-Semester', 'End-Semester']
   },
   fileUrl: {
     type: String,
@@ -60,6 +65,10 @@ const PaperSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  comment: {
+    type: String,
+    trim: true
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -68,7 +77,7 @@ const PaperSchema = new mongoose.Schema({
 
 // Add indexes for better search performance
 PaperSchema.index({ title: 'text', subject: 'text', tags: 'text' });
-PaperSchema.index({ department: 1, year: 1, semester: 1 });
+PaperSchema.index({ batch: 1, year: 1, semester: 1 });
 PaperSchema.index({ approved: 1 });
 
 module.exports = mongoose.model('Paper', PaperSchema); 

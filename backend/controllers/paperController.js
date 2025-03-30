@@ -1,33 +1,9 @@
 const Paper = require('../models/Paper');
 const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const multer = require('multer');
+const { handleFileUpload, deleteFileFromCloudinary } = require('../utils/cloudinaryUpload');
 
-// Configure Cloudinary storage for multer
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'pyq_papers',
-    resource_type: 'auto',
-    allowed_formats: ['pdf'],
-    format: 'pdf'
-  }
-});
-
-// Setup multer for file upload
-exports.upload = multer({
-  storage,
-  limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF files are allowed'), false);
-    }
-  }
-}).single('file');
+// Export the file upload middleware
+exports.upload = handleFileUpload;
 
 /**
  * @desc    Create a new paper
@@ -36,25 +12,19 @@ exports.upload = multer({
  */
 exports.createPaper = async (req, res) => {
   try {
-    // req.file contains the uploaded file info
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please upload a PDF file'
-      });
-    }
-
-    const { title, subject, department, year, semester, examType, tags } = req.body;
+    // req.file contains the uploaded file info (already handled by the upload middleware)
+    const { title, subject, batch, year, semester, examType, tags, comment } = req.body;
 
     // Create new paper
     const paper = await Paper.create({
       title,
       subject,
-      department,
+      batch,
       year,
       semester,
       examType,
       tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
+      comment: comment || '',
       fileUrl: req.file.path,
       publicId: req.file.filename,
       uploader: req.user.id,
@@ -83,7 +53,7 @@ exports.createPaper = async (req, res) => {
 exports.getPapers = async (req, res) => {
   try {
     const { 
-      department, 
+      batch,
       year, 
       semester, 
       examType, 
@@ -97,7 +67,7 @@ exports.getPapers = async (req, res) => {
     // Build query
     const query = {};
 
-    if (department) query.department = department;
+    if (batch) query.batch = batch;
     if (year) query.year = year;
     if (semester) query.semester = semester;
     if (examType) query.examType = examType;
@@ -215,28 +185,42 @@ exports.updatePaper = async (req, res) => {
       });
     }
 
-    const { title, subject, department, year, semester, examType, tags, approved } = req.body;
+    const { title, subject, batch, year, semester, examType, tags, approved, comment } = req.body;
 
     // Update fields if provided
     if (title) paper.title = title;
     if (subject) paper.subject = subject;
-    if (department) paper.department = department;
+    if (batch) paper.batch = batch;
     if (year) paper.year = year;
     if (semester) paper.semester = semester;
     if (examType) paper.examType = examType;
-    if (tags) paper.tags = tags.split(',').map(tag => tag.trim());
+    if (tags) paper.tags = typeof tags === 'string' ? tags.split(',').map(tag => tag.trim()) : tags;
+    if (comment !== undefined) paper.comment = comment;
     
     // Only admin can change approval status
     if (approved !== undefined && req.user.role === 'admin') {
       paper.approved = approved === 'true' || approved === true;
     }
 
-    // Save updates
+    // Handle file update if a new file is uploaded
+    if (req.file) {
+      // Delete the old file from cloudinary
+      if (paper.publicId) {
+        await deleteFileFromCloudinary(paper.publicId);
+      }
+      
+      // Update with new file info
+      paper.fileUrl = req.file.path;
+      paper.publicId = req.file.filename;
+    }
+
+    // Save the updated paper
     await paper.save();
 
     res.status(200).json({
       success: true,
-      data: paper
+      data: paper,
+      message: 'Paper updated successfully'
     });
   } catch (error) {
     console.error('Update paper error:', error);
@@ -273,7 +257,7 @@ exports.deletePaper = async (req, res) => {
     }
 
     // Delete file from Cloudinary
-    await cloudinary.uploader.destroy(paper.publicId);
+    await deleteFileFromCloudinary(paper.publicId);
 
     // Delete paper from database
     await paper.deleteOne();

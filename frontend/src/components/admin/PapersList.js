@@ -177,10 +177,10 @@ const PapersList = () => {
     
     try {
       // Call the deletePaper method from paperService
-      await paperService.deletePaper(selectedPaper.id);
+      await paperService.deletePaper(selectedPaper._id);
       
       // Update local state
-      setPapers(papers.filter(p => p.id !== selectedPaper.id));
+      setPapers(papers.filter(p => p._id !== selectedPaper._id));
       setDeleteDialogOpen(false);
       setSelectedPaper(null);
       
@@ -200,17 +200,15 @@ const PapersList = () => {
     if (!selectedPaper) return;
     
     try {
-      // Call the approvePaper method from paperService
-      await paperService.approvePaper(selectedPaper.id);
+      await paperService.approvePaper(selectedPaper._id);
       
       // Update local state
       setPapers(papers.map(p => 
-        p.id === selectedPaper.id ? { ...p, status: 'approved' } : p
+        p._id === selectedPaper._id ? { ...p, approved: true } : p
       ));
+      
       setApproveDialogOpen(false);
       setSelectedPaper(null);
-      
-      // Show a success message (in a real app)
     } catch (err) {
       console.error('Error approving paper:', err);
       setError('Failed to approve paper. Please try again.');
@@ -222,41 +220,39 @@ const PapersList = () => {
     setPage(0);
   };
 
-  // Filter papers based on search query and status filter
+  // Filter and search papers
   const filteredPapers = papers.filter(paper => {
     // Apply status filter
-    if (statusFilter !== 'all' && paper.status !== statusFilter) {
-      return false;
+    if (statusFilter === 'approved' && !paper.approved) return false;
+    if (statusFilter === 'pending' && paper.approved) return false;
+    
+    // Apply search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        paper.title?.toLowerCase().includes(query) ||
+        paper.subject?.toLowerCase().includes(query) ||
+        paper.batch?.toLowerCase().includes(query) ||
+        paper.year?.toLowerCase().includes(query) ||
+        paper.semester?.toLowerCase().includes(query) ||
+        paper.examType?.toLowerCase().includes(query)
+      );
     }
     
-    // Apply search filter (case insensitive)
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      paper.title.toLowerCase().includes(searchLower) ||
-      paper.subject.toLowerCase().includes(searchLower) ||
-      paper.department.toLowerCase().includes(searchLower) ||
-      paper.year.includes(searchQuery) ||
-      paper.examType.toLowerCase().includes(searchLower)
-    );
+    return true;
   });
 
-  // Paginate filtered papers
-  const paginatedPapers = filteredPapers.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
+  // Format date
+  const formatDate = (dateString) => {
+    try {
+      return format(new Date(dateString), 'MMM dd, yyyy');
+    } catch (e) {
+      return 'Unknown date';
+    }
+  };
 
   const getStatusChipColor = (status) => {
-    switch (status) {
-      case 'approved':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'rejected':
-        return 'error';
-      default:
-        return 'default';
-    }
+    return status ? 'success' : 'warning';
   };
 
   if (loading) {
@@ -276,30 +272,20 @@ const PapersList = () => {
   }
 
   return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h6" component="h2">
+    <Paper sx={{ p: 3 }}>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" component="h2" gutterBottom>
           Manage Papers
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<UploadIcon />}
-          onClick={handleUploadClick}
-        >
-          Upload New Paper
-        </Button>
-      </Box>
-
-      <Paper sx={{ mb: 3 }}>
-        <Box p={2} display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+        
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          {/* Search field */}
           <TextField
             placeholder="Search papers..."
             variant="outlined"
             size="small"
             value={searchQuery}
             onChange={handleSearchChange}
-            sx={{ minWidth: 300 }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -307,170 +293,202 @@ const PapersList = () => {
                 </InputAdornment>
               ),
             }}
+            sx={{ width: '300px' }}
           />
           
-          <Stack direction="row" spacing={1}>
-            <Chip 
-              label="All" 
+          <Box>
+            {/* Status filter buttons */}
+            <Button
+              variant={statusFilter === 'all' ? 'contained' : 'outlined'}
+              size="small"
               onClick={() => handleStatusFilterChange('all')}
-              color={statusFilter === 'all' ? 'primary' : 'default'}
-              variant={statusFilter === 'all' ? 'filled' : 'outlined'}
-            />
-            <Chip 
-              label="Approved" 
+              sx={{ mr: 1 }}
+            >
+              All
+            </Button>
+            <Button
+              variant={statusFilter === 'approved' ? 'contained' : 'outlined'}
+              size="small"
+              color="success"
               onClick={() => handleStatusFilterChange('approved')}
-              color={statusFilter === 'approved' ? 'success' : 'default'}
-              variant={statusFilter === 'approved' ? 'filled' : 'outlined'}
-            />
-            <Chip 
-              label="Pending" 
+              sx={{ mr: 1 }}
+            >
+              Approved
+            </Button>
+            <Button
+              variant={statusFilter === 'pending' ? 'contained' : 'outlined'}
+              size="small"
+              color="warning"
               onClick={() => handleStatusFilterChange('pending')}
-              color={statusFilter === 'pending' ? 'warning' : 'default'}
-              variant={statusFilter === 'pending' ? 'filled' : 'outlined'}
-            />
-          </Stack>
+              sx={{ mr: 2 }}
+            >
+              Pending
+            </Button>
+            
+            {/* Upload button */}
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<UploadIcon />}
+              onClick={handleUploadClick}
+            >
+              Upload Paper
+            </Button>
+          </Box>
         </Box>
-      </Paper>
-
-      <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 650 }}>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: 'action.hover' }}>
-              <TableCell>Title</TableCell>
-              <TableCell>Subject</TableCell>
-              <TableCell>Department</TableCell>
-              <TableCell>Year</TableCell>
-              <TableCell>Upload Date</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Downloads</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {paginatedPapers.length > 0 ? (
-              paginatedPapers.map((paper) => (
-                <TableRow key={paper.id} hover>
-                  <TableCell sx={{ maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {paper.title}
-                  </TableCell>
-                  <TableCell>{paper.subject}</TableCell>
-                  <TableCell>{paper.department}</TableCell>
-                  <TableCell>{paper.year} (Sem {paper.semester})</TableCell>
-                  <TableCell>{format(paper.uploadDate, 'dd MMM yyyy')}</TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={paper.status.charAt(0).toUpperCase() + paper.status.slice(1)} 
-                      size="small" 
-                      color={getStatusChipColor(paper.status)}
-                    />
-                  </TableCell>
-                  <TableCell>{paper.downloadCount}</TableCell>
-                  <TableCell align="right">
-                    <Box>
-                      <Tooltip title="View Paper">
-                        <IconButton 
-                          size="small" 
-                          color="primary"
-                          onClick={() => handleViewPaper(paper.id)}
-                        >
-                          <ViewIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Edit Paper">
-                        <IconButton 
-                          size="small" 
-                          color="secondary"
-                          onClick={() => handleEditPaper(paper.id)}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      {paper.status === 'pending' && (
-                        <Tooltip title="Approve Paper">
-                          <IconButton 
-                            size="small" 
-                            color="success"
-                            onClick={() => handleApproveClick(paper)}
+      </Box>
+      
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+      
+      {loading ? (
+        <Box display="flex" justifyContent="center" p={3}>
+          <CircularProgress />
+        </Box>
+      ) : filteredPapers.length === 0 ? (
+        <Alert severity="info">
+          No papers found. {searchQuery && 'Try a different search term.'}
+        </Alert>
+      ) : (
+        <TableContainer component={Paper} elevation={0}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Title</TableCell>
+                <TableCell>Subject</TableCell>
+                <TableCell>Batch</TableCell>
+                <TableCell>Year & Semester</TableCell>
+                <TableCell>Exam Type</TableCell>
+                <TableCell>Upload Date</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredPapers
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((paper) => (
+                  <TableRow key={paper._id}>
+                    <TableCell>
+                      <Typography variant="body2" noWrap sx={{ maxWidth: '200px' }}>
+                        {paper.title}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{paper.subject}</TableCell>
+                    <TableCell>{paper.batch}</TableCell>
+                    <TableCell>
+                      {paper.year}, {paper.semester}
+                    </TableCell>
+                    <TableCell>{paper.examType}</TableCell>
+                    <TableCell>{formatDate(paper.createdAt)}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={paper.approved ? 'Approved' : 'Pending'}
+                        color={getStatusChipColor(paper.approved)}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      <Stack direction="row" spacing={1} justifyContent="flex-end">
+                        <Tooltip title="View Paper">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => handleViewPaper(paper._id)}
                           >
-                            <ApproveIcon />
+                            <ViewIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                      )}
-                      <Tooltip title="Delete Paper">
-                        <IconButton 
-                          size="small" 
-                          color="error"
-                          onClick={() => handleDeleteClick(paper)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={8} align="center">
-                  <Typography variant="body1" py={3}>
-                    {searchQuery 
-                      ? 'No papers match your search criteria.' 
-                      : 'No papers available.'}
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={filteredPapers.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
-      </TableContainer>
-
+                        <Tooltip title="Edit Paper">
+                          <IconButton
+                            size="small"
+                            color="secondary"
+                            onClick={() => handleEditPaper(paper._id)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        {!paper.approved && (
+                          <Tooltip title="Approve">
+                            <IconButton
+                              size="small"
+                              color="success"
+                              onClick={() => handleApproveClick(paper)}
+                            >
+                              <ApproveIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        <Tooltip title="Delete">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleDeleteClick(paper)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={filteredPapers.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
+        </TableContainer>
+      )}
+      
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
       >
-        <DialogTitle>Delete Paper</DialogTitle>
+        <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete the paper "{selectedPaper?.title}"? This action cannot be undone.
+            Are you sure you want to delete this paper?
+            <br />
+            Title: {selectedPaper?.title}
+            <br />
+            This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
-            Delete
-          </Button>
+          <Button onClick={handleDeleteConfirm} color="error">Delete</Button>
         </DialogActions>
       </Dialog>
-
+      
       {/* Approve Confirmation Dialog */}
       <Dialog
         open={approveDialogOpen}
         onClose={() => setApproveDialogOpen(false)}
       >
-        <DialogTitle>Approve Paper</DialogTitle>
+        <DialogTitle>Confirm Approval</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to approve the paper "{selectedPaper?.title}"? Once approved, it will be visible to all users.
+            Are you sure you want to approve this paper?
+            <br />
+            Title: {selectedPaper?.title}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setApproveDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleApproveConfirm} color="success" variant="contained">
-            Approve
-          </Button>
+          <Button onClick={handleApproveConfirm} color="success">Approve</Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Paper>
   );
 };
 

@@ -168,3 +168,25 @@ exports.deleteFeedback = async (req, res) => {
     });
   }
 };
+
+// @desc    Get all feedbacks for the current user
+// @route   GET /api/feedback/me
+// @access  Private
+exports.getUserFeedbacks = async (req, res) => {
+  try {
+    const feedbacks = await Feedback.find({ user: req.user.id }).sort('-createdAt');
+
+    res.status(200).json({
+      success: true,
+      count: feedbacks.length,
+      data: feedbacks
+    });
+  } catch (error) {
+    console.error('Get user feedbacks error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get your feedbacks',
+      error: error.message
+    });
+  }
+};

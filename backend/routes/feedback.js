@@ -5,7 +5,8 @@ const {
   getFeedbacks,
   getPaperFeedbacks,
   updateFeedbackStatus,
-  deleteFeedback
+  deleteFeedback,
+  getUserFeedbacks
 } = require('../controllers/feedbackController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
@@ -15,6 +16,7 @@ router.get('/paper/:paperId', getPaperFeedbacks);
 // Private routes (logged in users)
 router.post('/', protect, createFeedback);
 router.delete('/:id', protect, deleteFeedback);
+router.get('/me', protect, getUserFeedbacks);
 
 // Admin routes
 router.get('/', protect, adminOnly, getFeedbacks);

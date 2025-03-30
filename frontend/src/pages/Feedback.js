@@ -256,7 +256,7 @@ const Feedback = () => {
                       </Box>
                       
                       <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Submitted on {format(new Date(item.createdAt), 'MMM dd, yyyy')}
+                        Submitted on {format(new Date(item.createdAt || Date.now()), 'MMM dd, yyyy')}
                       </Typography>
                       
                       <Box display="flex" alignItems="center" mb={2}>

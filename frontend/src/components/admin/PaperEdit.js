@@ -14,11 +14,13 @@ import {
   CircularProgress,
   Chip,
   Stack,
-  Divider
+  Divider,
+  Link
 } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
-import { PAPER_CATEGORIES } from '../../constants';
-import { paperService } from '../../services/api';
+import { paperService } from '../../services/adminService';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 
 const PaperEdit = () => {
   const { id } = useParams();
@@ -26,11 +28,11 @@ const PaperEdit = () => {
   const [formData, setFormData] = useState({
     title: '',
     subject: '',
-    department: '',
+    batch: '',
     year: '',
     semester: '',
     examType: '',
-    tags: ''
+    comment: ''
   });
 
   const [loading, setLoading] = useState(true);
@@ -38,6 +40,12 @@ const PaperEdit = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [paperDetails, setPaperDetails] = useState(null);
+  const [file, setFile] = useState(null);
+
+  // Define options for dropdown menus
+  const yearOptions = ['First Year', 'Second Year', 'Third Year', 'Fourth Year'];
+  const semesterOptions = ['Semester 1', 'Semester 2', 'Semester 3', 'Semester 4', 'Semester 5', 'Semester 6', 'Semester 7', 'Semester 8'];
+  const examTypeOptions = ['CA', 'Mid-Semester', 'End-Semester'];
 
   useEffect(() => {
     const fetchPaper = async () => {
@@ -45,20 +53,17 @@ const PaperEdit = () => {
         setLoading(true);
         setError('');
         
-        const paper = await paperService.getPaper(id);
+        const paper = await paperService.getPaperById(id);
         setPaperDetails(paper);
-        
-        // Format tags from array to comma-separated string
-        const tagsString = paper.tags ? paper.tags.join(', ') : '';
         
         setFormData({
           title: paper.title || '',
           subject: paper.subject || '',
-          department: paper.department || '',
+          batch: paper.batch || '',
           year: paper.year || '',
           semester: paper.semester || '',
           examType: paper.examType || '',
-          tags: tagsString
+          comment: paper.comment || ''
         });
       } catch (err) {
         console.error('Error fetching paper:', err);
@@ -81,8 +86,14 @@ const PaperEdit = () => {
     setError('');
   };
 
+  const handleFileChange = (e) => {
+    if (e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
   const validateForm = () => {
-    // Required fields: title, subject, department, year, semester, examType
+    // Required fields: title, subject, year, semester, examType, batch
     if (!formData.title.trim()) {
       setError('Paper title is required');
       return false;
@@ -93,8 +104,8 @@ const PaperEdit = () => {
       return false;
     }
     
-    if (!formData.department) {
-      setError('Department is required');
+    if (!formData.batch.trim()) {
+      setError('Batch is required');
       return false;
     }
     
@@ -125,35 +136,35 @@ const PaperEdit = () => {
     setError('');
     setSuccess(false);
     
-    // Prepare data for update
-    const updateData = {
-      title: formData.title,
-      subject: formData.subject,
-      department: formData.department,
-      year: formData.year,
-      semester: formData.semester,
-      examType: formData.examType
-    };
+    // Prepare form data for multipart/form-data
+    const formDataToSend = new FormData();
+    formDataToSend.append('title', formData.title);
+    formDataToSend.append('subject', formData.subject);
+    formDataToSend.append('batch', formData.batch);
+    formDataToSend.append('year', formData.year);
+    formDataToSend.append('semester', formData.semester);
+    formDataToSend.append('examType', formData.examType);
     
-    // Process tags if present
-    if (formData.tags.trim()) {
-      // Convert comma-separated tags into array and trim whitespace
-      updateData.tags = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
-    } else {
-      updateData.tags = [];
+    if (formData.comment) {
+      formDataToSend.append('comment', formData.comment);
+    }
+    
+    // Only append file if a new one is selected
+    if (file) {
+      formDataToSend.append('file', file);
     }
     
     try {
-      await paperService.updatePaper(id, updateData);
+      await paperService.updatePaper(id, formDataToSend);
       setSuccess(true);
       
-      // Redirect after successful update
+      // Show success message and redirect
       setTimeout(() => {
         navigate('/admin/papers');
       }, 1500);
     } catch (err) {
       console.error('Paper update error:', err);
-      setError(err.response?.data?.error || 'Failed to update paper. Please try again.');
+      setError(err.response?.data?.message || 'Failed to update paper. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -182,109 +193,91 @@ const PaperEdit = () => {
           Edit Paper
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Update paper details below. File cannot be changed - delete this paper and upload a new one if you need to replace the file.
+          Update paper details below. Upload a new file only if you need to replace the existing one.
         </Typography>
         
         <Divider sx={{ mt: 2 }} />
         
-        <Box sx={{ mt: 2 }}>
+        {/* Current File Information */}
+        <Box sx={{ mt: 2, mb: 3 }}>
           <Stack direction="row" spacing={1} alignItems="center">
             <Typography variant="body2" color="text.secondary">
-              File:
+              Current File:
             </Typography>
             <Chip 
               label={paperDetails.fileUrl ? paperDetails.fileUrl.split('/').pop() : 'No file'} 
               variant="outlined"
               size="small"
             />
-          </Stack>
-          
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
-            <Typography variant="body2" color="text.secondary">
-              Status:
-            </Typography>
-            <Chip 
-              label={paperDetails.approved ? 'Approved' : 'Pending Approval'} 
-              color={paperDetails.approved ? 'success' : 'warning'}
-              size="small"
-            />
-          </Stack>
-          
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
-            <Typography variant="body2" color="text.secondary">
-              Stats:
-            </Typography>
-            <Chip 
-              label={`Views: ${paperDetails.views || 0}`} 
-              variant="outlined"
-              size="small"
-            />
-            <Chip 
-              label={`Downloads: ${paperDetails.downloads || 0}`} 
-              variant="outlined"
-              size="small"
-            />
+            {paperDetails.fileUrl && (
+              <Link 
+                href={paperDetails.fileUrl} 
+                target="_blank" 
+                rel="noopener"
+                underline="none"
+              >
+                <Button 
+                  startIcon={<FileDownloadIcon />} 
+                  size="small" 
+                  color="primary"
+                >
+                  Download
+                </Button>
+              </Link>
+            )}
           </Stack>
         </Box>
       </Box>
-      
-      {success && (
-        <Alert severity="success" sx={{ mb: 3 }}>
-          Paper updated successfully! Redirecting...
-        </Alert>
-      )}
-      
+
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
       
-      <Box component="form" onSubmit={handleSubmit} noValidate>
+      {success && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          Paper updated successfully!
+        </Alert>
+      )}
+
+      <form onSubmit={handleSubmit}>
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12}>
             <TextField
               fullWidth
-              required
-              label="Paper Title"
+              label="Title"
               name="title"
               value={formData.title}
               onChange={handleChange}
-              disabled={saving}
+              required
             />
           </Grid>
           
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              required
               label="Subject"
               name="subject"
               value={formData.subject}
               onChange={handleChange}
-              disabled={saving}
+              required
             />
           </Grid>
           
-          <Grid item xs={12} md={4}>
-            <FormControl fullWidth required>
-              <InputLabel>Department</InputLabel>
-              <Select
-                name="department"
-                value={formData.department}
-                onChange={handleChange}
-                label="Department"
-                disabled={saving}
-              >
-                <MenuItem value=""><em>Select Department</em></MenuItem>
-                {PAPER_CATEGORIES.DEPARTMENTS.map((dept) => (
-                  <MenuItem key={dept} value={dept}>{dept}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Batch"
+              name="batch"
+              value={formData.batch}
+              onChange={handleChange}
+              required
+              placeholder="e.g., 2021-2025"
+            />
           </Grid>
           
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} sm={4}>
             <FormControl fullWidth required>
               <InputLabel>Year</InputLabel>
               <Select
@@ -292,17 +285,15 @@ const PaperEdit = () => {
                 value={formData.year}
                 onChange={handleChange}
                 label="Year"
-                disabled={saving}
               >
-                <MenuItem value=""><em>Select Year</em></MenuItem>
-                {PAPER_CATEGORIES.YEARS.map((year) => (
-                  <MenuItem key={year} value={year}>{year}</MenuItem>
+                {yearOptions.map(option => (
+                  <MenuItem key={option} value={option}>{option}</MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Grid>
           
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} sm={4}>
             <FormControl fullWidth required>
               <InputLabel>Semester</InputLabel>
               <Select
@@ -310,17 +301,15 @@ const PaperEdit = () => {
                 value={formData.semester}
                 onChange={handleChange}
                 label="Semester"
-                disabled={saving}
               >
-                <MenuItem value=""><em>Select Semester</em></MenuItem>
-                {PAPER_CATEGORIES.SEMESTERS.map((semester) => (
-                  <MenuItem key={semester} value={semester}>{semester}</MenuItem>
+                {semesterOptions.map(option => (
+                  <MenuItem key={option} value={option}>{option}</MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Grid>
           
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} sm={4}>
             <FormControl fullWidth required>
               <InputLabel>Exam Type</InputLabel>
               <Select
@@ -328,50 +317,72 @@ const PaperEdit = () => {
                 value={formData.examType}
                 onChange={handleChange}
                 label="Exam Type"
-                disabled={saving}
               >
-                <MenuItem value=""><em>Select Exam Type</em></MenuItem>
-                {PAPER_CATEGORIES.EXAM_TYPES.map((type) => (
-                  <MenuItem key={type} value={type}>{type}</MenuItem>
+                {examTypeOptions.map(option => (
+                  <MenuItem key={option} value={option}>{option}</MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Grid>
           
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Tags (comma separated)"
-              name="tags"
-              value={formData.tags}
+              label="Comments"
+              name="comment"
+              value={formData.comment}
               onChange={handleChange}
-              disabled={saving}
-              helperText="Example: midterm, 2023, programming"
+              multiline
+              rows={3}
+              placeholder="Optional comments about this paper"
             />
           </Grid>
           
           <Grid item xs={12}>
-            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={saving}
-                startIcon={saving ? <CircularProgress size={20} /> : null}
-              >
-                {saving ? 'Saving...' : 'Save Changes'}
-              </Button>
-              
-              <Button
-                variant="outlined"
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<CloudUploadIcon />}
+              sx={{ mb: 2 }}
+            >
+              Upload New File
+              <input
+                type="file"
+                hidden
+                onChange={handleFileChange}
+                accept=".pdf,.doc,.docx"
+              />
+            </Button>
+            {file && (
+              <Typography variant="body2" color="text.secondary" sx={{ ml: 2, display: 'inline' }}>
+                New file selected: {file.name}
+              </Typography>
+            )}
+          </Grid>
+          
+          <Grid item xs={12}>
+            <Box display="flex" justifyContent="flex-end">
+              <Button 
+                variant="outlined" 
+                color="secondary" 
                 onClick={() => navigate('/admin/papers')}
+                sx={{ mr: 2 }}
                 disabled={saving}
               >
                 Cancel
               </Button>
+              <Button 
+                type="submit" 
+                variant="contained" 
+                color="primary"
+                disabled={saving}
+              >
+                {saving ? <CircularProgress size={24} /> : 'Save Changes'}
+              </Button>
             </Box>
           </Grid>
         </Grid>
-      </Box>
+      </form>
     </Paper>
   );
 };

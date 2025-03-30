@@ -80,7 +80,22 @@ export const paperService = {
   // Update paper
   updatePaper: async (paperId, paperData) => {
     try {
-      const response = await axios.put(`/api/papers/${paperId}`, paperData);
+      // Check if paperData is FormData (contains file)
+      const isFormData = paperData instanceof FormData;
+      
+      // Get the token directly from localStorage for multipart requests
+      const token = localStorage.getItem('token');
+      
+      const response = await axios.put(
+        `/api/papers/${paperId}`, 
+        paperData,
+        isFormData ? {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}` // Explicitly set token
+          }
+        } : undefined
+      );
       return response.data;
     } catch (error) {
       console.error('Error updating paper:', error);
