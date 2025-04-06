@@ -19,7 +19,8 @@ import {
   Description as PaperIcon,
   People as UsersIcon,
   Feedback as FeedbackIcon,
-  CloudUpload as UploadIcon
+  CloudUpload as UploadIcon,
+  Book as SubjectIcon
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,6 +32,7 @@ import PapersList from '../components/admin/PapersList';
 import PaperUpload from '../components/admin/PaperUpload';
 import UsersList from '../components/admin/UsersList';
 import FeedbackList from '../components/admin/FeedbackList';
+import SubjectManager from '../components/admin/SubjectManager';
 
 // TabPanel component for handling tab content
 const TabPanel = (props) => {
@@ -95,7 +97,7 @@ const AdminDashboard = () => {
     
     if (tabParam !== null) {
       const tabIndex = parseInt(tabParam, 10);
-      if (!isNaN(tabIndex) && tabIndex >= 0 && tabIndex <= 4) {
+      if (!isNaN(tabIndex) && tabIndex >= 0 && tabIndex <= 5) {
         setTabValue(tabIndex);
       }
     }
@@ -154,6 +156,7 @@ const AdminDashboard = () => {
           <Tab icon={<UploadIcon />} label="Upload" iconPosition="start" />
           <Tab icon={<UsersIcon />} label="Users" iconPosition="start" />
           <Tab icon={<FeedbackIcon />} label="Feedback" iconPosition="start" />
+          <Tab icon={<SubjectIcon />} label="Subjects" iconPosition="start" />
         </Tabs>
       </Paper>
 
@@ -175,6 +178,10 @@ const AdminDashboard = () => {
       
       <TabPanel value={tabValue} index={4}>
         <FeedbackList />
+      </TabPanel>
+      
+      <TabPanel value={tabValue} index={5}>
+        <SubjectManager />
       </TabPanel>
     </Container>
   );

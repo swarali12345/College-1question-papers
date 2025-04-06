@@ -3,48 +3,51 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import { authService, paperService, userService, feedbackService } from './services';
+import reportWebVitals from './reportWebVitals';
 
-// Expose services for testing in browser console
+// Expose services and test utilities only in development mode
 if (process.env.NODE_ENV === 'development') {
-  // Create test functions
+
+  // Test function for authService to try login, and fallback to registration if login fails
   const testAuthService = async () => {
+    console.log('Testing auth service...');
     try {
-      console.log('Testing auth service...');
-      // Try login first (in case user already exists)
-      try {
-        const loginData = await authService.login('test@example.com', 'password123');
-        console.log('Login successful:', loginData);
-        return loginData;
-      } catch (loginError) {
-        console.log('Login failed, trying registration instead:', loginError);
-        
-        // If login fails, try registration
-        const registerData = await authService.register('Test User', 'test@example.com', 'password123');
-        console.log('Registration successful:', registerData);
-        return registerData;
-      }
-    } catch (error) {
-      console.error('Auth service test failed:', error);
-      alert('API test failed. See console for details.');
-      throw error;
+      // Attempt to login with test credentials
+      const loginData = await authService.login('test@example.com', 'password123');
+      console.log('Login successful:', loginData);
+      return loginData;
+    } catch (loginError) {
+      // If login fails, attempt to register the user
+      console.log('Login failed, trying registration:', loginError);
+      const registerData = await authService.register('Test User', 'test@example.com', 'password123');
+      console.log('Registration successful:', registerData);
+      return registerData;
     }
   };
 
-  // Add services and test functions to window
-  window.apiServices = {
-    authService,
-    paperService,
-    userService,
-    feedbackService,
-    testAuthService
-  };
-  
+  // Expose services and the test function to the browser console for quick testing/debugging
+  Object.assign(window, {
+    apiServices: {
+      authService,
+      paperService,
+      userService,
+      feedbackService,
+      testAuthService
+    }
+  });
+
   console.log('API services available in console. Try window.apiServices.testAuthService()');
 }
 
+// Render the main React application to the DOM
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
-); 
+);
+
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();

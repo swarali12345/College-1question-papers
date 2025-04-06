@@ -11,6 +11,24 @@ export const paperService = {
     }
   },
 
+  getPapersBySubject: async (subjectId, year, semester, page = 1, limit = 10) => {
+    try {
+      const params = { 
+        subject: subjectId,
+        year,
+        semester,
+        page,
+        limit
+      };
+      console.log('Fetching papers with params:', params);
+      const response = await axios.get('/api/papers', { params });
+      console.log('Papers response from API:', response.data);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to fetch papers by subject' };
+    }
+  },
+
   getPaper: async (id) => {
     try {
       const response = await axios.get(`/api/papers/${id}`);

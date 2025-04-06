@@ -30,8 +30,6 @@ import {
 import homeStyles from '../styles/HomeStyles';
 import { useAuth } from '../contexts/AuthContext';
 
-
-
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [visible, setVisible] = useState(false);

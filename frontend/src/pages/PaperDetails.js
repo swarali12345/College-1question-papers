@@ -6,19 +6,15 @@ import {
   Typography, 
   Box, 
   Grid, 
-  Chip, 
   Button, 
   CircularProgress, 
   Alert,
   Divider,
-  Stack,
-  Link
+  Stack
 } from '@mui/material';
 import {
   Description as DescriptionIcon,
-  CloudDownload as CloudDownloadIcon,
   ArrowBack as ArrowBackIcon,
-  Visibility as VisibilityIcon,
   School as SchoolIcon,
   PictureAsPdf as PdfIcon
 } from '@mui/icons-material';
@@ -55,18 +51,6 @@ const PaperDetails = () => {
       fetchPaperDetails();
     }
   }, [id]);
-
-  const handleDownload = async () => {
-    try {
-      // Increment download count
-      await axios.put(`/api/papers/${id}/download`);
-      
-      // Trigger download
-      window.open(paper.fileUrl, '_blank');
-    } catch (err) {
-      console.error('Error downloading file:', err);
-    }
-  };
 
   const handleGoBack = () => {
     navigate(-1);
@@ -171,16 +155,6 @@ const PaperDetails = () => {
                 <Typography variant="body1">{formatDate(paper.createdAt)}</Typography>
               </Box>
 
-              <Box>
-                <Typography variant="subtitle2" color="text.secondary">Views</Typography>
-                <Typography variant="body1">{paper.views}</Typography>
-              </Box>
-
-              <Box>
-                <Typography variant="subtitle2" color="text.secondary">Downloads</Typography>
-                <Typography variant="body1">{paper.downloads}</Typography>
-              </Box>
-
               {paper.comment && (
                 <Box>
                   <Typography variant="subtitle2" color="text.secondary">Comments</Typography>
@@ -195,24 +169,14 @@ const PaperDetails = () => {
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Box>
                 <Typography variant="body2" color="text.secondary">
-                  File: {paper.fileUrl?.split('/').pop() || 'File not available'}
+                  Paper Viewer
                 </Typography>
               </Box>
               <Box>
                 <Button
-                  variant="outlined"
-                  color="primary"
-                  startIcon={<CloudDownloadIcon />}
-                  onClick={handleDownload}
-                  sx={{ mr: 2 }}
-                >
-                  Download
-                </Button>
-                <Button
                   variant="contained"
                   color="primary"
                   onClick={togglePdfViewer}
-                  sx={{ mr: 2 }}
                 >
                   {showPdfViewer ? 'Hide PDF' : 'View PDF'}
                 </Button>
@@ -222,6 +186,7 @@ const PaperDetails = () => {
                     color="secondary"
                     onClick={toggleViewerType}
                     startIcon={<PdfIcon />}
+                    sx={{ ml: 2 }}
                   >
                     {viewerType === 'native' ? 'Try External Viewer' : 'Try Native Viewer'}
                   </Button>
@@ -254,9 +219,6 @@ const PaperDetails = () => {
                       >
                         Try External Viewer
                       </Button>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                        If the PDF doesn't load, try using the external viewer or download it instead.
-                      </Typography>
                     </Box>
                   </object>
                 </Box>
@@ -271,16 +233,6 @@ const PaperDetails = () => {
                   />
                 </Box>
               )}
-              
-              <Box mt={2} textAlign="center">
-                <Typography variant="body2" color="text.secondary">
-                  If the viewers above don't work, you can {' '}
-                  <Link href={paper.fileUrl} target="_blank" rel="noopener noreferrer">
-                    open the PDF directly
-                  </Link>
-                  {' '} in a new tab or download it.
-                </Typography>
-              </Box>
             </Grid>
           )}
         </Grid>

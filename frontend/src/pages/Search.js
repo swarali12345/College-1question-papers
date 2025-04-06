@@ -14,8 +14,12 @@ import {
   Grid,
   Avatar,
 } from '@mui/material';
-import { Search as SearchIcon, School as SchoolIcon } from '@mui/icons-material';
+import {
+  Search as SearchIcon,
+  School as SchoolIcon,
+} from '@mui/icons-material';
 import searchStyles from '../styles/SearchStyles';
+import { ACADEMIC_OPTIONS } from '../constants';
 
 const Search = () => {
   const [year, setYear] = useState('');
@@ -51,22 +55,27 @@ const Search = () => {
 
   const handleSearch = () => {
     if (year && semester) {
-      navigate(`/subjects/${year}/${semester}`);
+      // Use encodeURIComponent to handle spaces and special characters in the URL
+      const encodedYear = encodeURIComponent(year);
+      const encodedSemester = encodeURIComponent(semester);
+      navigate(`/subjects/${encodedYear}/${encodedSemester}`);
     }
   };
 
-  // Get semester options based on selected year
-  const getSemesterOptions = () => {
+  // Get available semesters based on selected year
+  const getAvailableSemesters = () => {
     if (!year) return [];
     
-    const baseValue = (parseInt(year) - 1) * 2;
-    return [
-      { value: '1', label: `Semester ${baseValue + 1}` },
-      { value: '2', label: `Semester ${baseValue + 2}` }
-    ];
+    // Map year to its semesters
+    const yearIndex = ACADEMIC_OPTIONS.YEARS.indexOf(year);
+    if (yearIndex === -1) return [];
+    
+    // Each year has 2 semesters, so return the appropriate ones
+    const startIndex = yearIndex * 2;
+    return ACADEMIC_OPTIONS.SEMESTERS.slice(startIndex, startIndex + 2);
   };
 
-  const semesterOptions = getSemesterOptions();
+  const availableSemesters = getAvailableSemesters();
 
   return (
     <Box sx={searchStyles.root}>
@@ -96,10 +105,11 @@ const Search = () => {
                     onChange={handleYearChange}
                     label="Year"
                   >
-                    <MenuItem value="1">1st Year</MenuItem>
-                    <MenuItem value="2">2nd Year</MenuItem>
-                    <MenuItem value="3">3rd Year</MenuItem>
-                    <MenuItem value="4">4th Year</MenuItem>
+                    {ACADEMIC_OPTIONS.YEARS.map((yearOption) => (
+                      <MenuItem key={yearOption} value={yearOption}>
+                        {yearOption}
+                      </MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
               </Grid>
@@ -115,9 +125,9 @@ const Search = () => {
                     label="Semester"
                     disabled={!year}
                   >
-                    {semesterOptions.map(option => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
+                    {availableSemesters.map(semesterOption => (
+                      <MenuItem key={semesterOption} value={semesterOption}>
+                        {semesterOption}
                       </MenuItem>
                     ))}
                   </Select>

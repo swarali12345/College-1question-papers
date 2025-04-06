@@ -22,9 +22,11 @@ export const ROUTES = {
   SEARCH: '/search',
   SEARCH_RESULTS: '/search-results',
   SUBJECTS: '/subjects/:year/:semester',
-  SUBJECTS_WITH_PARAMS: (year, semester) => `/subjects/${year}/${semester}`,
-  PAPERS_BY_SUBJECT: '/papers/:year/:semester/:subjectCode',
-  PAPERS_BY_SUBJECT_WITH_PARAMS: (year, semester, subjectCode) => `/papers/${year}/${semester}/${subjectCode}`,
+  SUBJECTS_WITH_PARAMS: (year, semester) => 
+    `/subjects/${encodeURIComponent(year)}/${encodeURIComponent(semester)}`,
+  PAPERS_BY_SUBJECT: '/papers/:year/:semester/:subjectId',
+  PAPERS_BY_SUBJECT_WITH_PARAMS: (year, semester, subjectId) => 
+    `/papers/${encodeURIComponent(year)}/${encodeURIComponent(semester)}/${subjectId}`,
   DASHBOARD: '/profile',
   PAPER_DETAILS: '/papers/:id',
   PAPER_VIEW: (id) => `/papers/${id}`,
@@ -34,7 +36,8 @@ export const ROUTES = {
     PAPER_EDIT: '/admin/papers/edit/:id',
     PAPER_EDIT_WITH_ID: (id) => `/admin/papers/edit/${id}`,
     USERS: '/admin/users',
-    FEEDBACK: '/admin/feedback'
+    FEEDBACK: '/admin/feedback',
+    SUBJECTS: '/admin/subjects'
   }
 };
 
@@ -46,7 +49,31 @@ export const API_ENDPOINTS = {
   LOGOUT: '/auth/logout',
   PROFILE: '/users/profile',
   PAPERS: '/papers',
-  FEEDBACK: '/feedback'
+  FEEDBACK: '/feedback',
+  SUBJECTS: '/subjects'
+};
+
+// Year and Semester Options for UI
+export const ACADEMIC_OPTIONS = {
+  // Year options
+  YEARS: [
+    'First Year',
+    'Second Year',
+    'Third Year',
+    'Fourth Year'
+  ],
+  
+  // Semester options
+  SEMESTERS: [
+    'Semester 1',
+    'Semester 2',
+    'Semester 3',
+    'Semester 4',
+    'Semester 5',
+    'Semester 6',
+    'Semester 7',
+    'Semester 8'
+  ]
 };
 
 // Paper Categories

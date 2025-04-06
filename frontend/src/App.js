@@ -25,6 +25,7 @@ import NotFound from './pages/NotFound';
 import AdminDashboard from './pages/AdminDashboard';
 import Search from './pages/Search';
 import Subjects from './pages/Subjects';
+import SubjectPapers from './pages/SubjectPapers';
 import Feedback from './pages/Feedback';
 import UploadPaper from './pages/UploadPaper';
 
@@ -34,6 +35,7 @@ import AdminRoute from './components/routing/AdminRoute';
 
 // Admin Components
 import PaperEdit from './components/admin/PaperEdit';
+import SubjectManager from './components/admin/SubjectManager';
 
 function App() {
   return (
@@ -60,7 +62,9 @@ function App() {
                   <Route path="papers/:id" element={<PaperDetails />} />
                   <Route path="search" element={<Search />} />
                   <Route path="search-results" element={<SearchResults />} />
+                  <Route path="subjects" element={<Subjects />} />
                   <Route path="subjects/:year/:semester" element={<Subjects />} />
+                  <Route path="papers/:year/:semester/:subjectId" element={<SubjectPapers />} />
                   <Route path="/feedback" element={<Feedback />} />
                   
                   {/* Protected Routes */}
@@ -88,6 +92,15 @@ function App() {
                     element={
                       <AdminRoute>
                         <PaperEdit />
+                      </AdminRoute>
+                    } 
+                  />
+                  
+                  <Route 
+                    path="admin/subjects" 
+                    element={
+                      <AdminRoute>
+                        <SubjectManager />
                       </AdminRoute>
                     } 
                   />

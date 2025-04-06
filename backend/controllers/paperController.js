@@ -1,4 +1,5 @@
 const Paper = require('../models/Paper');
+const Subject = require('../models/Subject');
 const cloudinary = require('cloudinary').v2;
 const { handleFileUpload, deleteFileFromCloudinary } = require('../utils/cloudinaryUpload');
 
@@ -14,6 +15,29 @@ exports.createPaper = async (req, res) => {
   try {
     // req.file contains the uploaded file info (already handled by the upload middleware)
     const { title, subject, batch, year, semester, examType, tags, comment } = req.body;
+
+    // Check if subject exists, if not create it
+    try {
+      // First check if the subject already exists
+      const existingSubject = await Subject.findOne({
+        name: subject,
+        year: year,
+        semester: semester
+      });
+
+      if (!existingSubject) {
+        // Create new subject in the Subject collection
+        await Subject.create({
+          name: subject,
+          year: year,
+          semester: semester
+        });
+        console.log(`Created new subject: ${subject} (${year} - ${semester})`);
+      }
+    } catch (subjectError) {
+      console.error('Error creating subject:', subjectError);
+      // Continue with paper creation even if subject creation fails
+    }
 
     // Create new paper
     const paper = await Paper.create({
@@ -186,6 +210,39 @@ exports.updatePaper = async (req, res) => {
     }
 
     const { title, subject, batch, year, semester, examType, tags, approved, comment } = req.body;
+
+    // If subject, year or semester has changed, check if the subject exists in the Subject collection
+    if ((subject && subject !== paper.subject) || 
+        (year && year !== paper.year) || 
+        (semester && semester !== paper.semester)) {
+      
+      try {
+        // Use the new values or fall back to existing ones
+        const subjectName = subject || paper.subject;
+        const subjectYear = year || paper.year;
+        const subjectSemester = semester || paper.semester;
+        
+        // Check if the subject exists
+        const existingSubject = await Subject.findOne({
+          name: subjectName,
+          year: subjectYear,
+          semester: subjectSemester
+        });
+        
+        if (!existingSubject) {
+          // Create new subject
+          await Subject.create({
+            name: subjectName,
+            year: subjectYear,
+            semester: subjectSemester
+          });
+          console.log(`Created new subject: ${subjectName} (${subjectYear} - ${subjectSemester})`);
+        }
+      } catch (subjectError) {
+        console.error('Error creating subject during paper update:', subjectError);
+        // Continue with paper update even if subject creation fails
+      }
+    }
 
     // Update fields if provided
     if (title) paper.title = title;
