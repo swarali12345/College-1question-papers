@@ -64,11 +64,46 @@ function App() {
                   <Route path="/" element={<Layout />}>
                     <Route index element={<Home />} />
                     <Route path="papers/:id" element={<PaperDetails />} />
-                    <Route path="search" element={<Search />} />
-                    <Route path="search-results" element={<SearchResults />} />
-                    <Route path="subjects" element={<Subjects />} />
-                    <Route path="subjects/:year/:semester" element={<Subjects />} />
-                    <Route path="papers/:year/:semester/:subjectId" element={<SubjectPapers />} />
+                    <Route 
+                      path="search" 
+                      element={
+                        <ProtectedRoute>
+                          <Search />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="search-results" 
+                      element={
+                        <ProtectedRoute>
+                          <SearchResults />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="subjects" 
+                      element={
+                        <ProtectedRoute>
+                          <Subjects />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="subjects/:year/:semester" 
+                      element={
+                        <ProtectedRoute>
+                          <Subjects />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="papers/:year/:semester/:subjectId" 
+                      element={
+                        <ProtectedRoute>
+                          <SubjectPapers />
+                        </ProtectedRoute>
+                      } 
+                    />
                     <Route path="/feedback" element={<Feedback />} />
                     
                     {/* Protected Routes */}

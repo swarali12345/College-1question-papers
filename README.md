@@ -75,12 +75,6 @@ REACT_APP_API_URL=http://localhost:5000/api
 
 ### Backend (.env)
 ```
-<<<<<<< HEAD
-PORT=5000
-MONGODB_URI=mongodb://localhost:27017/sit-papers
-JWT_SECRET=your_jwt_secret
-``` 
-=======
 MONGODB_URI=mongodb+srv://swaralilimaye60:StnfhbSiiam6q67b@cluster144.0ytesid.mongodb.net/?retryWrites=true&w=majority&appName=Cluster144
 JWT_SECRET=your_jwt_secret_key_here
 PORT=5000
@@ -90,4 +84,51 @@ EMAIL=swaralilimaye60@gmail.com
 PASSWORD=Swarali@1
 
 ```
->>>>>>> b8235eafbadb74aae19c58769c738c26db89e076
+
+## Deployment Guide
+
+### Backend Deployment (Render.com)
+
+1. Create an account on [Render.com](https://render.com/)
+2. Create a new Web Service
+3. Connect your GitHub repository or upload your code
+4. Configure your Web Service:
+   - **Name**: Your preferred service name
+   - **Runtime**: Node
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+   - **Plan**: Free or paid plan based on your needs
+
+5. Set up the following environment variables in the Render dashboard:
+   - `MONGODB_URI`: Your MongoDB connection string
+   - `JWT_SECRET`: Secret for JWT token generation
+   - `CLOUDINARY_CLOUD_NAME`: Your Cloudinary cloud name
+   - `CLOUDINARY_API_KEY`: Your Cloudinary API key
+   - `CLOUDINARY_API_SECRET`: Your Cloudinary API secret
+   - `NODE_ENV`: Set to `production`
+   - `CLIENT_URL`: Your frontend URL from Netlify
+   - Any other environment variables used in your .env file
+
+6. Deploy your application
+
+### Frontend Deployment (Netlify)
+
+1. Create an account on [Netlify](https://netlify.com/)
+2. Create a new site from Git
+3. Connect your GitHub repository
+4. Configure your build settings:
+   - **Base directory**: frontend
+   - **Build command**: `npm ci --legacy-peer-deps && npm run netlify-build`
+   - **Publish directory**: build
+
+5. Set up environment variables in the Netlify dashboard:
+   - `REACT_APP_API_URL`: Your backend URL from Render
+
+6. Deploy your site
+
+### Post-Deployment Steps
+
+1. Verify that the backend is accessible by visiting an endpoint directly in the browser
+2. Test the complete application flow from the frontend
+3. Check that authentication works as expected
+4. Monitor application logs for any issues

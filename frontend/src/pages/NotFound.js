@@ -63,14 +63,6 @@ const NotFound = () => {
               Go Home
             </Button>
             
-            <Button
-              variant="outlined"
-              startIcon={<SearchIcon />}
-              onClick={() => navigate(ROUTES.SEARCH)}
-              sx={{ minWidth: 150 }}
-            >
-              Search Papers
-            </Button>
           </Box>
         </Paper>
       </Container>

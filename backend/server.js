@@ -49,6 +49,11 @@ const corsOptions = {
       allowedOrigins.push(process.env.CLIENT_URL);
     }
     
+    // Allow Netlify domains
+    if (origin && (origin.includes('netlify.app') || origin.includes('netlify.com'))) {
+      allowedOrigins.push(origin);
+    }
+    
     // Allow requests with no origin (like mobile apps, curl requests, etc.)
     if (!origin) return callback(null, true);
     
