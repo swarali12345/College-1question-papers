@@ -160,7 +160,7 @@ const PapersList = () => {
   };
 
   const handleEditPaper = (paperId) => {
-    navigate(`${ROUTES.ADMIN.PAPERS_EDIT}/${paperId}`);
+    navigate(`${ROUTES.ADMIN.PAPER_EDIT_WITH_ID(paperId)}`);
   };
 
   const handleViewPaper = (paperId) => {
@@ -215,17 +215,8 @@ const PapersList = () => {
     }
   };
 
-  const handleStatusFilterChange = (status) => {
-    setStatusFilter(status);
-    setPage(0);
-  };
-
-  // Filter and search papers
+  // Filter and search papers (only filtering by search now)
   const filteredPapers = papers.filter(paper => {
-    // Apply status filter
-    if (statusFilter === 'approved' && !paper.approved) return false;
-    if (statusFilter === 'pending' && paper.approved) return false;
-    
     // Apply search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -297,34 +288,6 @@ const PapersList = () => {
           />
           
           <Box>
-            {/* Status filter buttons */}
-            <Button
-              variant={statusFilter === 'all' ? 'contained' : 'outlined'}
-              size="small"
-              onClick={() => handleStatusFilterChange('all')}
-              sx={{ mr: 1 }}
-            >
-              All
-            </Button>
-            <Button
-              variant={statusFilter === 'approved' ? 'contained' : 'outlined'}
-              size="small"
-              color="success"
-              onClick={() => handleStatusFilterChange('approved')}
-              sx={{ mr: 1 }}
-            >
-              Approved
-            </Button>
-            <Button
-              variant={statusFilter === 'pending' ? 'contained' : 'outlined'}
-              size="small"
-              color="warning"
-              onClick={() => handleStatusFilterChange('pending')}
-              sx={{ mr: 2 }}
-            >
-              Pending
-            </Button>
-            
             {/* Upload button */}
             <Button
               variant="contained"

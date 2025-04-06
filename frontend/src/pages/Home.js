@@ -93,7 +93,15 @@ const Home = () => {
               <Box sx={homeStyles.taglineContainer}>
                 <Chip 
                   label="Exam season can be tough, so here's something to make it a little easier." 
-                  sx={homeStyles.tagChip}
+                  sx={{
+                    ...homeStyles.tagChip,
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    padding: { xs: '8px 12px', sm: '10px 16px' },
+                    fontWeight: 500,
+                    '& .MuiChip-label': {
+                      px: { xs: 1, sm: 2 }
+                    }
+                  }}
                 />
                 <Typography
                   variant="h5"
@@ -110,33 +118,40 @@ const Home = () => {
               </Box>
             </Fade>
             
-            {/* Search Bar */}
+            {/* Search Secret Button */}
             <Fade in={visible} timeout={2000} style={{ transitionDelay: '900ms' }}>
-              <Paper elevation={0} sx={homeStyles.searchBar}>
-                <TextField
-                  fullWidth
-                  placeholder="Search by Year and Semester"
-                  variant="standard"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  InputProps={{
-                    disableUnderline: true,
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon color="primary" />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-                <Button 
-                  color="primary" 
-                  variant="contained"
-                  sx={homeStyles.searchButton}
-                  component={RouterLink}
-                  to="/search"
-                > 
-                  Search
-                </Button>
+              <Paper 
+                elevation={0} 
+                sx={{
+                  ...homeStyles.searchBar,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.12)'
+                  },
+                  transition: 'all 0.3s ease'
+                }}
+                component={RouterLink}
+                to="/search"
+              >
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  width: '100%', 
+                  px: 2,
+                  py: 1 
+                }}>
+                  <SearchIcon color="primary" sx={{ mr: 1 }} />
+                  <Typography 
+                    color="text.secondary" 
+                    sx={{ 
+                      flexGrow: 1, 
+                      opacity: 0.8 
+                    }}
+                  >
+                    Search by Year and Semester
+                  </Typography>
+                </Box>
               </Paper>
             </Fade>
             

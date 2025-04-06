@@ -77,25 +77,7 @@ const DashboardOverview = () => {
         // Fetch user stats
         const userStats = await userService.getUserStats();
         
-        // Create monthly stats if not available
-        let processedMonthlyStats = paperStats.monthlyUploads || [];
-        if (!processedMonthlyStats.length && paperStats.papers) {
-          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          const monthCounts = Array(12).fill(0);
-          
-          paperStats.papers.forEach(paper => {
-            if (paper.createdAt) {
-              const date = new Date(paper.createdAt);
-              const month = date.getMonth();
-              monthCounts[month]++;
-            }
-          });
-          
-          processedMonthlyStats = months.map((month, index) => ({
-            month,
-            count: monthCounts[index]
-          }));
-        }
+        console.log('Received stats:', paperStats); // Debug log
         
         setStats({
           totalPapers: paperStats.totalPapers || 0,
@@ -103,7 +85,7 @@ const DashboardOverview = () => {
           totalViews: paperStats.totalViews || 0,
           recentPapers: Array.isArray(paperStats.recentPapers) ? paperStats.recentPapers : [],
           topPapers: Array.isArray(paperStats.topPapers) ? paperStats.topPapers : [],
-          monthlyUploads: processedMonthlyStats
+          monthlyUploads: Array.isArray(paperStats.monthlyUploads) ? paperStats.monthlyUploads : []
         });
       } catch (err) {
         console.error('Error fetching dashboard stats:', err);
@@ -206,34 +188,35 @@ const DashboardOverview = () => {
       {/* Charts */}
       <Grid container spacing={3} mb={4}>
         <Grid item xs={12}>
-          {stats.monthlyUploads.length > 0 ? (
-            <Paper sx={{ p: 2 }}>
-              <Chart 
-                options={uploadsTrendOptions} 
-                series={[{
-                  name: 'Uploads',
-                  data: stats.monthlyUploads.map(item => item.count)
-                }]} 
-                type="area" 
-                height={350} 
-              />
-            </Paper>
-          ) : (
-            <Paper sx={{ p: 3, height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <Typography color="text.secondary">
-                No monthly data available
-              </Typography>
-            </Paper>
-          )}
+          <Paper sx={{ p: 2 }}>
+            <Chart 
+              options={uploadsTrendOptions} 
+              series={[{
+                name: 'Uploads',
+                data: stats.monthlyUploads.map(item => item.count)
+              }]} 
+              type="area" 
+              height={350} 
+            />
+          </Paper>
         </Grid>
       </Grid>
       
-      {/* Recent Papers */}
+      {/* Recent Papers and Most Popular Papers */}
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 0, overflow: 'hidden' }}>
-            <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'white' }}>
+          <Paper sx={{ p: 0, overflow: 'hidden', height: '100%' }}>
+            <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="h6">Recent Papers</Typography>
+              <Button 
+                component={RouterLink} 
+                to="http://localhost:3000/admin?tab=1" 
+                size="small" 
+                endIcon={<ArrowForwardIcon />}
+                sx={{ color: 'white' }}
+              >
+                View All
+              </Button>
             </Box>
             {!Array.isArray(stats.recentPapers) || stats.recentPapers.length === 0 ? (
               <Box p={3} textAlign="center">
@@ -250,17 +233,28 @@ const DashboardOverview = () => {
                         </Avatar>
                       </ListItemAvatar>
                       <ListItemText 
-                        primary={paper.title}
+                        primary={
+                          <RouterLink 
+                            to={`/admin/papers/edit/${paper._id}`}
+                            style={{ textDecoration: 'none', color: 'inherit', fontWeight: 'medium' }}
+                          >
+                            {paper.title}
+                          </RouterLink>
+                        }
                         secondary={
                           <>
                             {`${paper.subject || 'Unknown subject'} • ${formatDate(paper.createdAt)}`}
                             <br />
-                            <Chip 
-                              label={paper.approved ? 'Approved' : 'Pending'} 
-                              size="small" 
-                              color={paper.approved ? 'success' : 'warning'}
-                              sx={{ mt: 0.5 }}
-                            />
+                            <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5, gap: 1 }}>
+                              <Chip 
+                                label={paper.approved ? 'Approved' : 'Pending'} 
+                                size="small" 
+                                color={paper.approved ? 'success' : 'warning'}
+                              />
+                              <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                {paper.views || 0} views
+                              </Typography>
+                            </Box>
                           </>
                         }
                       />
@@ -275,9 +269,18 @@ const DashboardOverview = () => {
         
         {/* Top Papers */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 0, overflow: 'hidden' }}>
-            <Box sx={{ p: 2, bgcolor: 'success.main', color: 'white' }}>
+          <Paper sx={{ p: 0, overflow: 'hidden', height: '100%' }}>
+            <Box sx={{ p: 2, bgcolor: 'success.main', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="h6">Most Popular Papers</Typography>
+              <Button 
+                component={RouterLink} 
+                to="http://localhost:3000/admin?tab=1" 
+                size="small" 
+                endIcon={<ArrowForwardIcon />}
+                sx={{ color: 'white' }}
+              >
+                View All
+              </Button>
             </Box>
             {!Array.isArray(stats.topPapers) || stats.topPapers.length === 0 ? (
               <Box p={3} textAlign="center">
@@ -294,12 +297,26 @@ const DashboardOverview = () => {
                         </Avatar>
                       </ListItemAvatar>
                       <ListItemText 
-                        primary={paper.title}
+                        primary={
+                          <RouterLink 
+                            to={`/admin/papers/edit/${paper._id}`}
+                            style={{ textDecoration: 'none', color: 'inherit', fontWeight: 'medium' }}
+                          >
+                            {paper.title}
+                          </RouterLink>
+                        }
                         secondary={
                           <>
                             {`${paper.subject || 'Unknown subject'} • ${paper.department || 'Unknown department'}`}
                             <br />
-                            {`${paper.views || 0} views`}
+                            <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5, gap: 1 }}>
+                              <Typography variant="caption" sx={{ fontWeight: 'medium' }}>
+                                {paper.views || 0} views
+                              </Typography>
+                              <Typography variant="caption">
+                                {paper.downloads || 0} downloads
+                              </Typography>
+                            </Box>
                           </>
                         }
                       />

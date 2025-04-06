@@ -98,11 +98,6 @@ const UsersList = () => {
     setPage(0);
   };
 
-  const handleStatusFilterChange = (status) => {
-    setStatusFilter(status);
-    setPage(0);
-  };
-
   const handleDeleteClick = (user) => {
     setSelectedUser(user);
     setDeleteDialogOpen(true);
@@ -198,24 +193,18 @@ const UsersList = () => {
     }
   };
 
-  // Filter users according to search, role, and status
+  // Filter users according to search and role
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
       user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.department?.toLowerCase().includes(searchQuery.toLowerCase());
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesRole = 
       roleFilter === 'all' || 
       (roleFilter === 'admin' && user.isAdmin) || 
       (roleFilter === 'user' && !user.isAdmin);
     
-    const matchesStatus = 
-      statusFilter === 'all' || 
-      (statusFilter === 'active' && (!user.status || user.status === 'active')) || 
-      (statusFilter === 'blocked' && user.status === 'blocked');
-    
-    return matchesSearch && matchesRole && matchesStatus;
+    return matchesSearch && matchesRole;
   });
 
   // Get paginated users
@@ -227,17 +216,6 @@ const UsersList = () => {
   const getRoleChipColor = (isAdmin) => {
     if (isAdmin) return 'primary';
     return 'default';
-  };
-
-  const getStatusChipColor = (status) => {
-    switch (status) {
-      case 'blocked':
-        return 'error';
-      case 'pending':
-        return 'warning';
-      default:
-        return 'success';
-    }
   };
 
   const getInitials = (name) => {
@@ -287,7 +265,7 @@ const UsersList = () => {
           <TextField
             fullWidth
             variant="outlined"
-            placeholder="Search users by name, email, or department"
+            placeholder="Search users by name or email"
             value={searchQuery}
             onChange={handleSearchChange}
             InputProps={{
@@ -322,29 +300,6 @@ const UsersList = () => {
                 color={roleFilter === 'user' ? 'primary' : 'default'}
               />
             </Box>
-            
-            <Box>
-              <Typography variant="body2" component="span" mr={1}>
-                Status:
-              </Typography>
-              <Chip 
-                label="All" 
-                onClick={() => handleStatusFilterChange('all')} 
-                color={statusFilter === 'all' ? 'primary' : 'default'}
-                sx={{ mr: 1 }}
-              />
-              <Chip 
-                label="Active" 
-                onClick={() => handleStatusFilterChange('active')} 
-                color={statusFilter === 'active' ? 'primary' : 'default'}
-                sx={{ mr: 1 }}
-              />
-              <Chip 
-                label="Blocked" 
-                onClick={() => handleStatusFilterChange('blocked')} 
-                color={statusFilter === 'blocked' ? 'primary' : 'default'}
-              />
-            </Box>
           </Box>
         </Box>
       </Paper>
@@ -358,16 +313,14 @@ const UsersList = () => {
                 <TableCell>User</TableCell>
                 <TableCell>Email</TableCell>
                 <TableCell>Role</TableCell>
-                <TableCell>Department</TableCell>
                 <TableCell>Joined</TableCell>
-                <TableCell>Status</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {paginatedUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center">
+                  <TableCell colSpan={5} align="center">
                     No users found
                   </TableCell>
                 </TableRow>
@@ -397,15 +350,7 @@ const UsersList = () => {
                         icon={user.isAdmin ? <AdminIcon /> : <UserIcon />}
                       />
                     </TableCell>
-                    <TableCell>{user.department || 'Not set'}</TableCell>
                     <TableCell>{formatDate(user.createdAt)}</TableCell>
-                    <TableCell>
-                      <Chip 
-                        label={user.status || 'Active'} 
-                        color={getStatusChipColor(user.status)}
-                        size="small"
-                      />
-                    </TableCell>
                     <TableCell align="right">
                       <Tooltip title="Actions">
                         <IconButton 

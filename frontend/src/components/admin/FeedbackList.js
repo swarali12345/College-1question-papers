@@ -138,12 +138,8 @@ const FeedbackList = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [responseDialogOpen, setResponseDialogOpen] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState(null);
-  const [responseText, setResponseText] = useState('');
-  const [viewType, setViewType] = useState('card'); // 'card' or 'table'
 
   useEffect(() => {
     // Fetch feedback from API
@@ -183,11 +179,6 @@ const FeedbackList = () => {
     setPage(0);
   };
 
-  const handlePriorityFilterChange = (priority) => {
-    setPriorityFilter(priority);
-    setPage(0);
-  };
-
   const handleDeleteClick = (item) => {
     setSelectedFeedback(item);
     setDeleteDialogOpen(true);
@@ -212,36 +203,6 @@ const FeedbackList = () => {
     }
   };
 
-  const handleResponseClick = (item) => {
-    setSelectedFeedback(item);
-    setResponseText(item.response || '');
-    setResponseDialogOpen(true);
-  };
-
-  const handleResponseSubmit = async () => {
-    if (!selectedFeedback) return;
-    
-    try {
-      // Call the respondToFeedback method from feedbackService
-      await feedbackService.respondToFeedback(selectedFeedback.id, responseText);
-      
-      // Update local state
-      setFeedback(feedback.map(f => 
-        f.id === selectedFeedback.id 
-          ? { ...f, response: responseText, status: 'resolved' } 
-          : f
-      ));
-      setResponseDialogOpen(false);
-      setSelectedFeedback(null);
-      setResponseText('');
-      
-      // Show a success message (in a real app)
-    } catch (err) {
-      console.error('Error responding to feedback:', err);
-      setError('Failed to submit response. Please try again.');
-    }
-  };
-
   const handleMarkResolved = async (item) => {
     try {
       // Call the updateFeedbackStatus method from feedbackService
@@ -249,61 +210,30 @@ const FeedbackList = () => {
       
       // Update local state
       setFeedback(feedback.map(f => 
-        f.id === item.id 
-          ? { ...f, status: 'resolved' } 
-          : f
+        f.id === item.id ? { ...f, status: 'resolved' } : f
       ));
-      
-      // Show a success message (in a real app)
-    } catch (err) {
-      console.error('Error resolving feedback:', err);
-      setError('Failed to mark feedback as resolved. Please try again.');
-    }
-  };
-
-  const handleMarkInProgress = async (item) => {
-    try {
-      // Call the updateFeedbackStatus method from feedbackService
-      await feedbackService.updateFeedbackStatus(item.id, 'in_progress');
-      
-      // Update local state
-      setFeedback(feedback.map(f => 
-        f.id === item.id 
-          ? { ...f, status: 'in_progress' } 
-          : f
-      ));
-      
-      // Show a success message (in a real app)
     } catch (err) {
       console.error('Error updating feedback status:', err);
-      setError('Failed to update feedback status. Please try again.');
+      setError('Failed to update status. Please try again.');
     }
   };
 
-  const handleToggleViewType = () => {
-    setViewType(viewType === 'card' ? 'table' : 'card');
-  };
-
-  // Filter feedback based on search query, status filter, and priority filter
+  // Filter feedback according to search and status
   const filteredFeedback = feedback.filter(item => {
-    // Apply status filter
-    if (statusFilter !== 'all' && item.status !== statusFilter) {
-      return false;
-    }
+    // Filter by search query
+    const matchesSearch = 
+      !searchQuery || 
+      item.subject?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      item.message?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.user?.email?.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // Apply priority filter
-    if (priorityFilter !== 'all' && item.priority !== priorityFilter) {
-      return false;
-    }
+    // Filter by status
+    const matchesStatus = 
+      statusFilter === 'all' || 
+      item.status === statusFilter;
     
-    // Apply search filter (case insensitive)
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      item.subject.toLowerCase().includes(searchLower) ||
-      item.message.toLowerCase().includes(searchLower) ||
-      item.user.name.toLowerCase().includes(searchLower) ||
-      item.user.email.toLowerCase().includes(searchLower)
-    );
+    return matchesSearch && matchesStatus;
   });
 
   // Sort by date (newest first)
@@ -332,27 +262,12 @@ const FeedbackList = () => {
 
   const getStatusLabel = (status) => {
     switch (status) {
-      case 'resolved':
-        return 'Resolved';
-      case 'in_progress':
-        return 'In Progress';
       case 'pending':
         return 'Pending';
+      case 'resolved':
+        return 'Resolved';
       default:
         return 'Unknown';
-    }
-  };
-
-  const getPriorityChipColor = (priority) => {
-    switch (priority) {
-      case 'high':
-        return 'error';
-      case 'medium':
-        return 'warning';
-      case 'low':
-        return 'success';
-      default:
-        return 'default';
     }
   };
 
@@ -395,148 +310,66 @@ const FeedbackList = () => {
     );
   }
 
-  const renderCardView = () => (
-    <Grid container spacing={3}>
-      {paginatedFeedback.length > 0 ? (
-        paginatedFeedback.map((item) => (
-          <Grid item xs={12} key={item.id}>
-            <Card 
-              elevation={3}
-              sx={{
-                borderLeft: 6,
-                borderColor: `${getPriorityChipColor(item.priority)}.main`,
-                position: 'relative'
-              }}
-            >
-              <CardContent>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} md={9}>
-                    <Box display="flex" alignItems="center" mb={1} gap={1}>
-                      <Avatar 
-                        sx={{ 
-                          bgcolor: stringToColor(item.user.name),
-                          width: 32, 
-                          height: 32
-                        }}
-                      >
-                        {getInitials(item.user.name)}
-                      </Avatar>
-                      <Typography variant="subtitle1" fontWeight="bold">
-                        {item.subject}
+  return (
+    <Box>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h6" component="h2">
+          User Feedback
                       </Typography>
-                      <Chip 
-                        size="small" 
-                        label={getStatusLabel(item.status)} 
-                        color={getStatusChipColor(item.status)}
-                      />
                     </Box>
                     
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      From {item.user.name} ({item.user.email}) - {format(new Date(item.createdAt || Date.now()), 'dd MMM yyyy')}
+      <Paper sx={{ mb: 3 }}>
+        <Box p={2} display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+          <TextField
+            placeholder="Search feedback..."
+            variant="outlined"
+            size="small"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            sx={{ minWidth: 300 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+          
+          <Box display="flex" gap={2}>
+            {/* Status Filters */}
+            <Box>
+              <Typography variant="caption" display="block" gutterBottom>
+                Status
                     </Typography>
-                    
-                    <Typography variant="body1" sx={{ mb: 2 }}>
-                      {item.message}
-                    </Typography>
-                    
-                    {item.response && (
-                      <Box sx={{ 
-                        bgcolor: 'background.default', 
-                        p: 2, 
-                        borderRadius: 1,
-                        borderLeft: 3,
-                        borderColor: 'primary.main'
-                      }}>
-                        <Typography variant="subtitle2" fontWeight="bold">
-                          Response:
-                        </Typography>
-                        <Typography variant="body2">
-                          {item.response}
-                        </Typography>
-                      </Box>
-                    )}
-                  </Grid>
-                  
-                  <Grid item xs={12} md={3}>
-                    <Box display="flex" flexDirection="column" alignItems="flex-start">
-                      <Box display="flex" alignItems="center" mb={2}>
-                        <Typography variant="body2" mr={1}>
-                          Rating:
-                        </Typography>
-                        <Rating 
-                          value={item.rating} 
-                          readOnly 
+              <Box display="flex" gap={1}>
+                <Chip 
+                  label="All" 
+                  onClick={() => handleStatusFilterChange('all')}
+                  color={statusFilter === 'all' ? 'primary' : 'default'}
+                  variant={statusFilter === 'all' ? 'filled' : 'outlined'}
+                  size="small"
+                />
+                <Chip 
+                  label="Pending" 
+                  onClick={() => handleStatusFilterChange('pending')}
+                  color={statusFilter === 'pending' ? 'warning' : 'default'}
+                  variant={statusFilter === 'pending' ? 'filled' : 'outlined'}
+                  size="small"
+                />
+                <Chip 
+                  label="Resolved" 
+                  onClick={() => handleStatusFilterChange('resolved')}
+                  color={statusFilter === 'resolved' ? 'success' : 'default'}
+                  variant={statusFilter === 'resolved' ? 'filled' : 'outlined'}
                           size="small"
-                          icon={<StarIcon fontSize="inherit" />}
                         />
                       </Box>
-                      
-                      <Stack spacing={1} width="100%">
-                        {item.status !== 'resolved' && (
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="success"
-                            startIcon={<ResolvedIcon />}
-                            onClick={() => handleMarkResolved(item)}
-                          >
-                            Mark Resolved
-                          </Button>
-                        )}
-                        
-                        {item.status === 'pending' && (
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="primary"
-                            onClick={() => handleMarkInProgress(item)}
-                          >
-                            Mark In Progress
-                          </Button>
-                        )}
-                        
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="primary"
-                          startIcon={<ReplyIcon />}
-                          onClick={() => handleResponseClick(item)}
-                        >
-                          {item.response ? 'Edit Response' : 'Respond'}
-                        </Button>
-                        
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="error"
-                          startIcon={<DeleteIcon />}
-                          onClick={() => handleDeleteClick(item)}
-                        >
-                          Delete
-                        </Button>
-                      </Stack>
+            </Box>
+          </Box>
                     </Box>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))
-      ) : (
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="body1">
-              {searchQuery || statusFilter !== 'all' || priorityFilter !== 'all'
-                ? 'No feedback matches your search criteria.' 
-                : 'No feedback available.'}
-            </Typography>
           </Paper>
-        </Grid>
-      )}
-    </Grid>
-  );
 
-  const renderTableView = () => (
     <TableContainer component={Paper}>
       <Table sx={{ minWidth: 650 }}>
         <TableHead>
@@ -545,7 +378,6 @@ const FeedbackList = () => {
             <TableCell>User</TableCell>
             <TableCell>Date</TableCell>
             <TableCell>Status</TableCell>
-            <TableCell>Priority</TableCell>
             <TableCell>Rating</TableCell>
             <TableCell align="right">Actions</TableCell>
           </TableRow>
@@ -598,13 +430,6 @@ const FeedbackList = () => {
                   />
                 </TableCell>
                 <TableCell>
-                  <Chip 
-                    label={item.priority.charAt(0).toUpperCase() + item.priority.slice(1)} 
-                    size="small" 
-                    color={getPriorityChipColor(item.priority)}
-                  />
-                </TableCell>
-                <TableCell>
                   <Box display="flex" alignItems="center">
                     <Rating 
                       value={item.rating} 
@@ -616,15 +441,6 @@ const FeedbackList = () => {
                 </TableCell>
                 <TableCell align="right">
                   <Box>
-                    <Tooltip title="Respond">
-                      <IconButton 
-                        size="small" 
-                        color="primary"
-                        onClick={() => handleResponseClick(item)}
-                      >
-                        <ReplyIcon />
-                      </IconButton>
-                    </Tooltip>
                     {item.status !== 'resolved' && (
                       <Tooltip title="Mark as Resolved">
                         <IconButton 
@@ -651,9 +467,9 @@ const FeedbackList = () => {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={7} align="center">
+                <TableCell colSpan={6} align="center">
                 <Typography variant="body1" py={3}>
-                  {searchQuery || statusFilter !== 'all' || priorityFilter !== 'all'
+                    {searchQuery || statusFilter !== 'all'
                     ? 'No feedback matches your search criteria.' 
                     : 'No feedback available.'}
                 </Typography>
@@ -663,119 +479,6 @@ const FeedbackList = () => {
         </TableBody>
       </Table>
     </TableContainer>
-  );
-
-  return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h6" component="h2">
-          User Feedback
-        </Typography>
-        <Button
-          variant="outlined"
-          onClick={handleToggleViewType}
-        >
-          Switch to {viewType === 'card' ? 'Table' : 'Card'} View
-        </Button>
-      </Box>
-
-      <Paper sx={{ mb: 3 }}>
-        <Box p={2} display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
-          <TextField
-            placeholder="Search feedback..."
-            variant="outlined"
-            size="small"
-            value={searchQuery}
-            onChange={handleSearchChange}
-            sx={{ minWidth: 300 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-          
-          <Box display="flex" gap={2}>
-            {/* Status Filters */}
-            <Box>
-              <Typography variant="caption" display="block" gutterBottom>
-                Status
-              </Typography>
-              <Box display="flex" gap={1}>
-                <Chip 
-                  label="All" 
-                  onClick={() => handleStatusFilterChange('all')}
-                  color={statusFilter === 'all' ? 'primary' : 'default'}
-                  variant={statusFilter === 'all' ? 'filled' : 'outlined'}
-                  size="small"
-                />
-                <Chip 
-                  label="Pending" 
-                  onClick={() => handleStatusFilterChange('pending')}
-                  color={statusFilter === 'pending' ? 'warning' : 'default'}
-                  variant={statusFilter === 'pending' ? 'filled' : 'outlined'}
-                  size="small"
-                />
-                <Chip 
-                  label="In Progress" 
-                  onClick={() => handleStatusFilterChange('in_progress')}
-                  color={statusFilter === 'in_progress' ? 'primary' : 'default'}
-                  variant={statusFilter === 'in_progress' ? 'filled' : 'outlined'}
-                  size="small"
-                />
-                <Chip 
-                  label="Resolved" 
-                  onClick={() => handleStatusFilterChange('resolved')}
-                  color={statusFilter === 'resolved' ? 'success' : 'default'}
-                  variant={statusFilter === 'resolved' ? 'filled' : 'outlined'}
-                  size="small"
-                />
-              </Box>
-            </Box>
-            
-            {/* Priority Filters */}
-            <Box>
-              <Typography variant="caption" display="block" gutterBottom>
-                Priority
-              </Typography>
-              <Box display="flex" gap={1}>
-                <Chip 
-                  label="All" 
-                  onClick={() => handlePriorityFilterChange('all')}
-                  color={priorityFilter === 'all' ? 'primary' : 'default'}
-                  variant={priorityFilter === 'all' ? 'filled' : 'outlined'}
-                  size="small"
-                />
-                <Chip 
-                  label="High" 
-                  onClick={() => handlePriorityFilterChange('high')}
-                  color={priorityFilter === 'high' ? 'error' : 'default'}
-                  variant={priorityFilter === 'high' ? 'filled' : 'outlined'}
-                  size="small"
-                />
-                <Chip 
-                  label="Medium" 
-                  onClick={() => handlePriorityFilterChange('medium')}
-                  color={priorityFilter === 'medium' ? 'warning' : 'default'}
-                  variant={priorityFilter === 'medium' ? 'filled' : 'outlined'}
-                  size="small"
-                />
-                <Chip 
-                  label="Low" 
-                  onClick={() => handlePriorityFilterChange('low')}
-                  color={priorityFilter === 'low' ? 'success' : 'default'}
-                  variant={priorityFilter === 'low' ? 'filled' : 'outlined'}
-                  size="small"
-                />
-              </Box>
-            </Box>
-          </Box>
-        </Box>
-      </Paper>
-
-      {viewType === 'card' ? renderCardView() : renderTableView()}
 
       <Box mt={3}>
         <TablePagination
@@ -804,63 +507,6 @@ const FeedbackList = () => {
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
           <Button onClick={handleDeleteConfirm} color="error" variant="contained">
             Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Response Dialog */}
-      <Dialog
-        open={responseDialogOpen}
-        onClose={() => setResponseDialogOpen(false)}
-        fullWidth
-        maxWidth="md"
-      >
-        <DialogTitle>{selectedFeedback?.response ? 'Edit Response' : 'Respond to Feedback'}</DialogTitle>
-        <DialogContent>
-          {selectedFeedback && (
-            <>
-              <Box mb={3} p={2} bgcolor="background.default" borderRadius={1}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Original Feedback:
-                </Typography>
-                <Typography variant="subtitle1" gutterBottom>
-                  {selectedFeedback.subject}
-                </Typography>
-                <Typography variant="body2" paragraph>
-                  {selectedFeedback.message}
-                </Typography>
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Typography variant="body2">
-                    Rating:
-                  </Typography>
-                  <Rating value={selectedFeedback.rating} readOnly size="small" />
-                </Box>
-              </Box>
-              
-              <TextField
-                fullWidth
-                multiline
-                rows={6}
-                label="Your Response"
-                value={responseText}
-                onChange={(e) => setResponseText(e.target.value)}
-                placeholder="Type your response to this feedback..."
-                variant="outlined"
-              />
-            </>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setResponseDialogOpen(false)}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleResponseSubmit} 
-            variant="contained" 
-            color="primary"
-            disabled={!responseText.trim()}
-          >
-            {selectedFeedback?.response ? 'Update Response' : 'Send Response'}
           </Button>
         </DialogActions>
       </Dialog>

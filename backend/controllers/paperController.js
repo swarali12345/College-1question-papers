@@ -380,50 +380,74 @@ exports.incrementDownload = async (req, res) => {
 };
 
 /**
- * @desc    Get paper statistics
- * @route   GET /api/papers/stats
+ * @desc    Get paper statistics overview for admin dashboard
+ * @route   GET /api/papers/stats/overview
  * @access  Private/Admin
  */
 exports.getPaperStats = async (req, res) => {
   try {
-    // Total count
+    // Total papers count
     const totalPapers = await Paper.countDocuments();
     
-    // Approved vs pending
+    // Approved vs pending papers
     const approvedPapers = await Paper.countDocuments({ approved: true });
     const pendingPapers = await Paper.countDocuments({ approved: false });
     
-    // Papers by department
-    const papersByDepartment = await Paper.aggregate([
+    // Recent papers (last 5 uploaded)
+    const recentPapers = await Paper.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate('uploader', 'name email')
+      .select('title subject views downloads approved createdAt');
+    
+    // Most popular papers (by views)
+    const topPapers = await Paper.find()
+      .sort({ views: -1 })
+      .limit(5)
+      .populate('uploader', 'name email')
+      .select('title subject department views downloads approved');
+    
+    // Total views and downloads
+    const statsAggregation = await Paper.aggregate([
+      { 
+        $group: { 
+          _id: null, 
+          totalViews: { $sum: '$views' }, 
+          totalDownloads: { $sum: '$downloads' } 
+        } 
+      }
+    ]);
+    
+    const totalViews = statsAggregation.length > 0 ? statsAggregation[0].totalViews : 0;
+    const totalDownloads = statsAggregation.length > 0 ? statsAggregation[0].totalDownloads : 0;
+    
+    // Papers by department for potential chart data
+    const departmentStats = await Paper.aggregate([
       { $group: { _id: '$department', count: { $sum: 1 } } },
       { $sort: { count: -1 } }
     ]);
     
-    // Papers by year
-    const papersByYear = await Paper.aggregate([
-      { $group: { _id: '$year', count: { $sum: 1 } } },
-      { $sort: { _id: 1 } }
-    ]);
+    // Monthly uploads for chart data - Get all papers with createdAt field
+    const allPapers = await Paper.find().select('createdAt');
     
-    // Recent papers (last 7 days)
-    const lastWeek = new Date();
-    lastWeek.setDate(lastWeek.getDate() - 7);
+    // Process monthly data
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthCounts = Array(12).fill(0);
     
-    const recentPapers = await Paper.countDocuments({
-      createdAt: { $gte: lastWeek }
+    // Count papers by month
+    allPapers.forEach(paper => {
+      if (paper.createdAt) {
+        const date = new Date(paper.createdAt);
+        const month = date.getMonth(); // 0-11
+        monthCounts[month]++;
+      }
     });
     
-    // Most viewed papers
-    const mostViewedPapers = await Paper.find()
-      .sort({ views: -1 })
-      .limit(5)
-      .select('title views downloads');
-    
-    // Most downloaded papers
-    const mostDownloadedPapers = await Paper.find()
-      .sort({ downloads: -1 })
-      .limit(5)
-      .select('title views downloads');
+    // Format monthly data
+    const formattedMonthlyUploads = months.map((month, index) => ({
+      month,
+      count: monthCounts[index]
+    }));
     
     res.status(200).json({
       success: true,
@@ -431,11 +455,12 @@ exports.getPaperStats = async (req, res) => {
         totalPapers,
         approvedPapers,
         pendingPapers,
-        papersByDepartment,
-        papersByYear,
+        totalViews,
+        totalDownloads,
         recentPapers,
-        mostViewedPapers,
-        mostDownloadedPapers
+        topPapers,
+        departmentStats,
+        monthlyUploads: formattedMonthlyUploads
       }
     });
   } catch (error) {
