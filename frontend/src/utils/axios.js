@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Define API base URL based on environment
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = process.env.REACT_APP_API_URL || 'https://college-question-papers-backend.onrender.com';
 console.log('API URL is set to:', API_URL);
 
 const instance = axios.create({
