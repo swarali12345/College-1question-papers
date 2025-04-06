@@ -3,7 +3,7 @@ import { STORAGE_KEYS, API_ENDPOINTS } from '../constants';
 
 // Create an axios instance with default configuration
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000',
+  baseURL: process.env.REACT_APP_API_URL || 'https://college-question-papers-backend.onrender.com',
   headers: {
     'Content-Type': 'application/json',
   },
