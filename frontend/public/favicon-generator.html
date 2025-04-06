@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Favicon Generator</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: Arial, sans-serif;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      margin: 20px 0;
+    }
+    .instructions {
+      max-width: 500px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Graduation Cap Favicon Generator</h1>
+  <div class="instructions">
+    <p>This page generates a graduation cap favicon. Right-click on the canvas below and select "Save image as..." to save it as a PNG file, then convert it to .ico format.</p>
+  </div>
+  <canvas id="canvas" width="64" height="64"></canvas>
+  
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Set background
+    ctx.fillStyle = '#d32f2f'; // Match theme color
+    ctx.fillRect(0, 0, 64, 64);
+    
+    // Draw graduation cap emoji
+    ctx.font = '44px serif';
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🎓', 32, 32);
+    
+    // Alternative: Draw a custom graduation cap
+    /*
+    ctx.fillStyle = 'black';
+    // Draw the cap base
+    ctx.fillRect(12, 32, 40, 10);
+    // Draw the cap top
+    ctx.beginPath();
+    ctx.moveTo(32, 10);
+    ctx.lineTo(12, 32);
+    ctx.lineTo(52, 32);
+    ctx.closePath();
+    ctx.fill();
+    // Draw the tassel
+    ctx.fillStyle = 'gold';
+    ctx.beginPath();
+    ctx.arc(45, 28, 5, 0, Math.PI * 2);
+    ctx.fill();
+    */
+  </script>
+</body>
+</html> 
