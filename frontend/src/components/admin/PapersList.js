@@ -26,7 +26,6 @@ import {
   Stack
 } from '@mui/material';
 import {
-  Edit as EditIcon,
   Delete as DeleteIcon,
   Visibility as ViewIcon,
   CheckCircle as ApproveIcon,
@@ -157,10 +156,6 @@ const PapersList = () => {
   const handleUploadClick = () => {
     // Change tab to upload paper
     navigate(`${ROUTES.ADMIN.DASHBOARD}?tab=2`);
-  };
-
-  const handleEditPaper = (paperId) => {
-    navigate(`${ROUTES.ADMIN.PAPER_EDIT_WITH_ID(paperId)}`);
   };
 
   const handleViewPaper = (paperId) => {
@@ -365,15 +360,7 @@ const PapersList = () => {
                             <ViewIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Edit Paper">
-                          <IconButton
-                            size="small"
-                            color="secondary"
-                            onClick={() => handleEditPaper(paper._id)}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                        
                         {!paper.approved && (
                           <Tooltip title="Approve">
                             <IconButton
@@ -385,6 +372,7 @@ const PapersList = () => {
                             </IconButton>
                           </Tooltip>
                         )}
+                        
                         <Tooltip title="Delete">
                           <IconButton
                             size="small"

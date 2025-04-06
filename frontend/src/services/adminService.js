@@ -77,40 +77,22 @@ export const paperService = {
     }
   },
   
-  // Update paper
-  updatePaper: async (paperId, paperData) => {
-    try {
-      // Check if paperData is FormData (contains file)
-      const isFormData = paperData instanceof FormData;
-      
-      // Get the token directly from localStorage for multipart requests
-      const token = localStorage.getItem('token');
-      
-      const response = await axios.put(
-        `/api/papers/${paperId}`, 
-        paperData,
-        isFormData ? {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}` // Explicitly set token
-          }
-        } : undefined
-      );
-      return response.data;
-    } catch (error) {
-      console.error('Error updating paper:', error);
-      throw error.response?.data || { message: 'Failed to update paper' };
-    }
-  },
-  
   // Get paper by ID
   getPaperById: async (paperId) => {
     try {
-      const response = await axios.get(`/api/papers/${paperId}`);
-      return response.data.data;
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      };
+      
+      console.log('Getting paper by ID:', paperId);
+      const response = await axios.get(`/api/papers/${paperId}`, config);
+      return response.data;
     } catch (error) {
-      console.error('Error fetching paper:', error);
-      throw error.response?.data || { message: 'Failed to fetch paper' };
+      console.error('Error getting paper by ID:', error);
+      throw error;
     }
   }
 };

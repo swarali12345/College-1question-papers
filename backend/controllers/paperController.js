@@ -202,7 +202,7 @@ exports.updatePaper = async (req, res) => {
     }
 
     // Check ownership or admin status
-    if (paper.uploader.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (paper.uploader.toString() !== req.user.id && req.user.role !== 'admin' && !req.user.isAdmin) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this paper'
@@ -306,7 +306,7 @@ exports.deletePaper = async (req, res) => {
     }
 
     // Check ownership or admin status
-    if (paper.uploader.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (paper.uploader.toString() !== req.user.id && req.user.role !== 'admin' && !req.user.isAdmin) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to delete this paper'

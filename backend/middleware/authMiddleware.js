@@ -29,16 +29,35 @@ exports.protect = async (req, res, next) => {
   try {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+    
+    // Get full user from database to include all properties
+    const user = await User.findById(decoded.id).select('-password');
+    
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found or token invalid'
+      });
+    }
+    
+    // Add complete user info to request
     req.user = {
-      id: decoded.id,
-      isAdmin: decoded.isAdmin,
-      name: decoded.name,
-      email: decoded.email
+      id: user._id.toString(),
+      isAdmin: user.isAdmin || user.role === 'admin',
+      role: user.role || 'user',
+      name: user.name,
+      email: user.email
     };
+    
+    console.log('Auth middleware user info:', {
+      id: req.user.id, 
+      isAdmin: req.user.isAdmin,
+      role: req.user.role
+    });
 
     next();
   } catch (err) {
+    console.error('JWT verification error:', err);
     return res.status(401).json({
       success: false,
       message: 'Not authorized to access this route'

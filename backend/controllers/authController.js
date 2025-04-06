@@ -287,18 +287,11 @@ const sendTokenResponse = (user, statusCode, res) => {
     }
   };
   
-  // Add redirect information for admin users
-  if (user.isAdmin) {
-    response.redirect = {
-      path: '/admin',
-      isAdmin: true
-    };
-  } else {
-    response.redirect = {
-      path: '/dashboard',
-      isAdmin: false
-    };
-  }
+  // Add redirect information for all users to go to search page
+  response.redirect = {
+    path: '/search',
+    isAdmin: user.isAdmin
+  };
 
   res.status(statusCode).json(response);
 }; 

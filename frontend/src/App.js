@@ -34,7 +34,6 @@ import ProtectedRoute from './components/routing/ProtectedRoute';
 import AdminRoute from './components/routing/AdminRoute';
 
 // Admin Components
-import PaperEdit from './components/admin/PaperEdit';
 import SubjectManager from './components/admin/SubjectManager';
 
 function App() {
@@ -83,15 +82,6 @@ function App() {
                     element={
                       <AdminRoute>
                         <AdminDashboard />
-                      </AdminRoute>
-                    } 
-                  />
-                  
-                  <Route 
-                    path="admin/papers/edit/:id" 
-                    element={
-                      <AdminRoute>
-                        <PaperEdit />
                       </AdminRoute>
                     } 
                   />

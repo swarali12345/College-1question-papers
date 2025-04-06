@@ -89,14 +89,9 @@ export const AuthProvider = ({ children }) => {
       // Set the authenticated user in state
       setUser(data.user);
 
-      // Handle redirect path from backend response
-      if (data.redirect && data.redirect.path) {
-        console.log('Redirecting to:', data.redirect.path);
-        navigate(data.redirect.path);
-      } else {
-        // Fallback redirect if redirect info is missing
-        navigate(data.user.isAdmin ? '/admin' : '/dashboard');
-      }
+      // Redirect to search page after login, regardless of user role
+      console.log('Redirecting to search page after login');
+      navigate(ROUTES.SEARCH);
       
       return data.user;
     } catch (error) {

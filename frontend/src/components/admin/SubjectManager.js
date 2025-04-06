@@ -206,13 +206,7 @@ const SubjectManager = () => {
             >
               Refresh
             </Button>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setOpenNewDialog(true)}
-            >
-              Add New Subject
-            </Button>
+            
           </Grid>
         </Grid>
       </Paper>

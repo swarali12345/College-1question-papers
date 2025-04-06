@@ -235,7 +235,7 @@ const DashboardOverview = () => {
                       <ListItemText 
                         primary={
                           <RouterLink 
-                            to={`/admin/papers/edit/${paper._id}`}
+                            to={`/papers/${paper._id}`}
                             style={{ textDecoration: 'none', color: 'inherit', fontWeight: 'medium' }}
                           >
                             {paper.title}
@@ -299,7 +299,7 @@ const DashboardOverview = () => {
                       <ListItemText 
                         primary={
                           <RouterLink 
-                            to={`/admin/papers/edit/${paper._id}`}
+                            to={`/papers/${paper._id}`}
                             style={{ textDecoration: 'none', color: 'inherit', fontWeight: 'medium' }}
                           >
                             {paper.title}
