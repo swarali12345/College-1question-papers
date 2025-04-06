@@ -8,6 +8,10 @@ const path = require('path');
 const mongoSanitize = require('express-mongo-sanitize');
 const helmet = require('helmet');
 
+// Add global fetch for Node.js versions that don't have it built-in
+// This will be used for Google OAuth API calls
+global.fetch = global.fetch || require('node-fetch');
+
 // Load env variables
 dotenv.config();
 
@@ -57,6 +61,7 @@ const corsOptions = {
   },
   credentials: true,
   optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-access-token']
 };
 

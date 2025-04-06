@@ -37,6 +37,16 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  // Google OAuth fields
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  isEmailVerified: {
+    type: Boolean,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now

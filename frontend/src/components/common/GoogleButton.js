@@ -1,45 +1,18 @@
 import React from 'react';
 import { Button } from '@mui/material';
-import { useGoogleLogin } from '@react-oauth/google';
 import GoogleIcon from '@mui/icons-material/Google';
-import { useAuth } from '../../contexts/AuthContext';
 
-const GoogleButton = ({ onSuccess, onError, disabled, variant = "contained" }) => {
-  const { googleLogin } = useAuth();
-  
-  const login = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      try {
-        // The accessToken from Google OAuth
-        const { access_token } = tokenResponse;
-        
-        // Call the googleLogin function from AuthContext
-        await googleLogin(access_token);
-        
-        // Call the external onSuccess if provided
-        if (onSuccess) {
-          onSuccess(tokenResponse);
-        }
-      } catch (error) {
-        console.error('Google login error:', error);
-        if (onError) {
-          onError(error);
-        }
-      }
-    },
-    onError: (error) => {
-      console.error('Google login failed:', error);
-      if (onError) {
-        onError(error);
-      }
-    },
-  });
+const GoogleButton = ({ disabled, variant = "contained" }) => {
+  const handleGoogleLogin = () => {
+    // Redirect to backend's Google OAuth endpoint
+    window.location.href = 'http://localhost:5000/api/auth/google';
+  };
 
   return (
     <Button
       variant={variant}
       color="primary"
-      onClick={() => login()}
+      onClick={handleGoogleLogin}
       disabled={disabled}
       fullWidth
       startIcon={<GoogleIcon />}

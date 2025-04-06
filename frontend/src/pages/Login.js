@@ -10,7 +10,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { School as SchoolIcon } from '@mui/icons-material';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { ROUTES, APP_NAME } from '../constants';
 import FormField from '../components/common/FormField';
@@ -22,14 +22,14 @@ import Header from '../components/layout/Header';
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, googleLogin, isAuthenticated, loading, error, clearError } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { login, isAuthenticated, loading, error, clearError } = useAuth();
   
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [formError, setFormError] = useState('');
   
   // Remove the background styling effect that hides overflow
@@ -39,6 +39,56 @@ const Login = () => {
       clearError();
     };
   }, [clearError]);
+  
+  // Handle OAuth token from URL if present
+  useEffect(() => {
+    const token = searchParams.get('token');
+    const userId = searchParams.get('userId');
+    const errorMsg = searchParams.get('error');
+    
+    if (errorMsg) {
+      setFormError(decodeURIComponent(errorMsg));
+      return;
+    }
+    
+    if (token && userId) {
+      // Store the token and user data
+      localStorage.setItem('token', token);
+      
+      // Fetch user data and redirect
+      const fetchUserData = async () => {
+        try {
+          // Use the correct API endpoint with full URL path
+          const response = await fetch(`http://localhost:5000/api/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Server error:', errorData);
+            throw new Error(errorData.message || 'Failed to get user data');
+          }
+          
+          const userData = await response.json();
+          
+          // Store user data in localStorage
+          localStorage.setItem('user', JSON.stringify(userData.data));
+          localStorage.setItem('userRole', userData.data.isAdmin ? 'admin' : 'user');
+          
+          // Navigate to search page
+          navigate(ROUTES.SEARCH, { replace: true });
+          window.location.reload(); // Force reload to update auth state
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          setFormError('Authentication successful but failed to get user data: ' + error.message);
+        }
+      };
+      
+      fetchUserData();
+    }
+  }, [searchParams, navigate]);
   
   // Redirect if already authenticated
   useEffect(() => {
@@ -93,18 +143,6 @@ const Login = () => {
         setFormError('Login failed. Please try again later.');
       }
     }
-  };
-  
-  const handleGoogleLogin = async (tokenResponse) => {
-    // The GoogleButton component now handles the Google OAuth flow
-    console.log('Google login successful in Login component');
-    // No need for additional handling here as the GoogleButton component
-    // already calls the googleLogin function from AuthContext
-  };
-
-  const handleGoogleError = (error) => {
-    console.error('Google login error in Login component:', error);
-    setFormError('Google login failed. Please try again.');
   };
 
   return (
@@ -179,8 +217,6 @@ const Login = () => {
                 </Divider>
                 
                 <GoogleButton 
-                  onSuccess={handleGoogleLogin}
-                  onError={handleGoogleError}
                   disabled={loading}
                   variant="outlined"
                 />

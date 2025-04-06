@@ -266,6 +266,131 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
+// @desc    Initiate Google OAuth
+// @route   GET /api/auth/google
+// @access  Public
+exports.googleAuth = (req, res) => {
+  // Redirect to Google OAuth consent screen
+  const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${
+    process.env.GOOGLE_CLIENT_ID
+  }&redirect_uri=${encodeURIComponent(
+    `http://localhost:5000/api/auth/google/callback`
+  )}&response_type=code&scope=email profile&access_type=offline`;
+
+  res.redirect(googleAuthUrl);
+};
+
+// @desc    Google OAuth callback
+// @route   GET /api/auth/google/callback
+// @access  Public
+exports.googleCallback = async (req, res) => {
+  try {
+    const { code } = req.query;
+    
+    if (!code) {
+      console.error('No authorization code provided');
+      return res.status(400).json({
+        success: false,
+        message: 'Authorization code is required'
+      });
+    }
+    
+    console.log('Received Google auth code, exchanging for tokens...');
+    
+    // Exchange code for tokens
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: `http://localhost:5000/api/auth/google/callback`,
+        grant_type: 'authorization_code',
+      }),
+    });
+    
+    const tokens = await tokenResponse.json();
+    
+    if (tokens.error) {
+      console.error('Error exchanging code for tokens:', tokens);
+      return res.status(400).json({
+        success: false,
+        message: 'Failed to exchange authorization code for tokens',
+        error: tokens.error
+      });
+    }
+    
+    console.log('Successfully obtained Google tokens, fetching user info...');
+    
+    // Get user info from Google
+    const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: {
+        Authorization: `Bearer ${tokens.access_token}`,
+      },
+    });
+    
+    const userInfo = await userInfoResponse.json();
+    
+    if (!userInfo.email) {
+      console.error('No email in Google user info:', userInfo);
+      return res.status(400).json({
+        success: false,
+        message: 'Could not retrieve user information from Google'
+      });
+    }
+    
+    console.log(`Google user info retrieved: ${userInfo.email}`);
+    
+    // Check if user exists
+    let user = await User.findOne({ email: userInfo.email });
+    
+    if (!user) {
+      console.log(`Creating new user for: ${userInfo.email}`);
+      // Create new user if not exists
+      user = await User.create({
+        name: userInfo.name,
+        email: userInfo.email,
+        password: crypto.randomBytes(20).toString('hex'), // Random password
+        googleId: userInfo.sub,
+        profilePicture: userInfo.picture || '',
+        isEmailVerified: true // Google already verified the email
+      });
+    } else {
+      console.log(`Existing user found for: ${userInfo.email}`);
+      // Update existing user with Google info if needed
+      user.googleId = userInfo.sub;
+      user.isEmailVerified = true;
+      
+      // Update profile picture if not already set
+      if (!user.profilePicture && userInfo.picture) {
+        user.profilePicture = userInfo.picture;
+      }
+      
+      await user.save();
+    }
+    
+    // Generate JWT token and redirect to frontend
+    const token = user.getSignedJwtToken();
+    console.log(`Generated JWT token for user: ${user.email}`);
+    
+    // Use the correct frontend URL - ensure this matches your frontend
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+    const redirectUrl = `${clientUrl}/login?token=${token}&userId=${user._id}`;
+    
+    console.log(`Redirecting to: ${redirectUrl}`);
+    res.redirect(redirectUrl);
+    
+  } catch (error) {
+    console.error('Google OAuth callback error:', error);
+    // Redirect to frontend with error instead of returning JSON
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+    res.redirect(`${clientUrl}/login?error=${encodeURIComponent('Google authentication failed: ' + error.message)}`);
+  }
+};
+
 // Helper function to get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
   // Create token
