@@ -138,18 +138,49 @@ export const AuthProvider = ({ children }) => {
   };
   
   // Google login function
-  const googleLogin = async (tokenId) => {
+  const googleLogin = async (accessToken) => {
     setLoading(true);
     setError(null);
     
     try {
-      // This is a placeholder - we don't have Google login implemented yet
-      setError('Google login is not yet implemented');
-      throw new Error('Google login is not yet implemented');
+      console.log('Google login with access token:', accessToken ? 'token present' : 'no token');
+      
+      // Send the access token to your backend
+      const data = await authService.googleLogin(accessToken);
+      
+      // Log authentication data received
+      console.log('Google login successful, user data:', { 
+        id: data.user?.id,
+        name: data.user?.name,
+        isAdmin: data.user?.isAdmin,
+        hasToken: !!data.token
+      });
+      
+      if (!data.user) {
+        throw new Error('User data missing from Google login response');
+      }
+      
+      // Set the authenticated user in state
+      setUser(data.user);
+
+      // Redirect to search page after login
+      navigate(ROUTES.SEARCH);
+      
+      return data.user;
     } catch (error) {
-      const errorMessage = error.message || 'Google login failed';
+      console.error('Google login error in AuthContext:', error);
+      
+      // Create user-friendly error message
+      let errorMessage = 'Google login failed';
+      
+      if (error.response) {
+        errorMessage = error.response.data?.message || 'Server error during Google login';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       setError(errorMessage);
-      throw new Error(errorMessage);
+      throw error;
     } finally {
       setLoading(false);
     }

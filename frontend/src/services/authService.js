@@ -132,5 +132,36 @@ export const authService = {
   getUser: () => {
     const userJson = localStorage.getItem('user');
     return userJson ? JSON.parse(userJson) : null;
-  }
+  },
+
+  // Google login
+  googleLogin: async (accessToken) => {
+    try {
+      console.log('Attempting Google login with access token');
+      const response = await axios.post('/api/auth/google', { accessToken });
+      console.log('Google login response data:', response.data);
+      
+      // Check if the response contains the expected data
+      if (!response.data || !response.data.success) {
+        throw new Error('Invalid response from server');
+      }
+      
+      // Store authentication data
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        localStorage.setItem('userRole', response.data.user.isAdmin ? 'admin' : 'user');
+        
+        console.log('Auth data stored in localStorage from Google login');
+      } else {
+        console.error('No token in Google login response:', response.data);
+        throw new Error('Google login successful but no authentication token received');
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Google login error:', error);
+      throw error;
+    }
+  },
 }; 

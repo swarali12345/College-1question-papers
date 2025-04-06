@@ -1,35 +1,61 @@
 import React from 'react';
-import { Button, Box, CircularProgress } from '@mui/material';
-import GoogleIcon from '../../assets/icons/GoogleIcon';
+import { Button } from '@mui/material';
+import { useGoogleLogin } from '@react-oauth/google';
+import GoogleIcon from '@mui/icons-material/Google';
+import { useAuth } from '../../contexts/AuthContext';
 
-const GoogleButton = ({ onClick, loading, disabled }) => {
+const GoogleButton = ({ onSuccess, onError, disabled, variant = "contained" }) => {
+  const { googleLogin } = useAuth();
+  
+  const login = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        // The accessToken from Google OAuth
+        const { access_token } = tokenResponse;
+        
+        // Call the googleLogin function from AuthContext
+        await googleLogin(access_token);
+        
+        // Call the external onSuccess if provided
+        if (onSuccess) {
+          onSuccess(tokenResponse);
+        }
+      } catch (error) {
+        console.error('Google login error:', error);
+        if (onError) {
+          onError(error);
+        }
+      }
+    },
+    onError: (error) => {
+      console.error('Google login failed:', error);
+      if (onError) {
+        onError(error);
+      }
+    },
+  });
+
   return (
     <Button
+      variant={variant}
+      color="primary"
+      onClick={() => login()}
+      disabled={disabled}
       fullWidth
-      variant="outlined"
+      startIcon={<GoogleIcon />}
       sx={{
-        py: { xs: 1, sm: 1.2 },
-        borderColor: '#dddddd',
-        color: 'text.primary',
-        backgroundColor: 'background.paper',
+        backgroundColor: variant === 'contained' ? '#ffffff' : 'transparent',
+        color: variant === 'contained' ? '#757575' : 'inherit',
+        borderColor: variant === 'outlined' ? '#4285F4' : 'transparent',
         '&:hover': {
-          backgroundColor: '#f5f5f5',
-          borderColor: '#cccccc',
+          backgroundColor: variant === 'contained' ? '#f5f5f5' : 'rgba(66, 133, 244, 0.04)',
         },
-        fontSize: { xs: '0.9rem', sm: '1rem' },
         textTransform: 'none',
+        fontWeight: 500,
+        py: 1,
       }}
-      onClick={onClick}
-      disabled={disabled || loading}
-      startIcon={
-        loading ? (
-          <CircularProgress size={20} color="primary" />
-        ) : (
-          <GoogleIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
-        )
-      }
     >
-      {loading ? 'Connecting' : 'Sign in with Google'}
+      Sign in with Google
     </Button>
   );
 };

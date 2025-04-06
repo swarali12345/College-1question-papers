@@ -95,21 +95,16 @@ const Login = () => {
     }
   };
   
-  const handleGoogleLogin = async () => {
-    setGoogleLoading(true);
-    try {
-      // For now, just show this is not implemented
-      // In a real implementation, you would use a Google OAuth library
-      setFormError('Google login is not yet implemented in this demo');
-      setTimeout(() => setGoogleLoading(false), 1000);
-      
-      // Actual implementation would be something like:
-      // const response = await googleLogin(googleTokenId);
-    } catch (err) {
-      console.error('Google login error:', err);
-    } finally {
-      setGoogleLoading(false);
-    }
+  const handleGoogleLogin = async (tokenResponse) => {
+    // The GoogleButton component now handles the Google OAuth flow
+    console.log('Google login successful in Login component');
+    // No need for additional handling here as the GoogleButton component
+    // already calls the googleLogin function from AuthContext
+  };
+
+  const handleGoogleError = (error) => {
+    console.error('Google login error in Login component:', error);
+    setFormError('Google login failed. Please try again.');
   };
 
   return (
@@ -184,9 +179,10 @@ const Login = () => {
                 </Divider>
                 
                 <GoogleButton 
-                  onClick={handleGoogleLogin}
-                  loading={googleLoading}
+                  onSuccess={handleGoogleLogin}
+                  onError={handleGoogleError}
                   disabled={loading}
+                  variant="outlined"
                 />
 
                 <Box sx={styles.registerBox}>
