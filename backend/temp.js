@@ -1,4 +1,4 @@
-const Subject = require('../models/Subject');
+﻿const Subject = require('../models/Subject');
 
 /**
  * @desc    Create a new subject
@@ -8,7 +8,7 @@ const Subject = require('../models/Subject');
 exports.createSubject = async (req, res) => {
   try {
     const { name, year, semester } = req.body;
-    
+
     // Check if subject with the same name in the same year and semester already exists
     const existingSubject = await Subject.findOne({ name, year, semester });
     if (existingSubject) {
@@ -161,14 +161,14 @@ exports.getSubjectsByYearAndSemester = async (req, res) => {
 exports.getSubjectById = async (req, res) => {
   try {
     const subject = await Subject.findById(req.params.id);
-
+    
     if (!subject) {
       return res.status(404).json({
         success: false,
         message: 'Subject not found'
       });
     }
-
+    
     res.status(200).json({
       success: true,
       data: subject
@@ -191,16 +191,16 @@ exports.getSubjectById = async (req, res) => {
 exports.deleteSubject = async (req, res) => {
   try {
     const subject = await Subject.findById(req.params.id);
-
+    
     if (!subject) {
       return res.status(404).json({
         success: false,
         message: 'Subject not found'
       });
     }
-
+    
     await subject.deleteOne();
-
+    
     res.status(200).json({
       success: true,
       message: 'Subject deleted successfully'

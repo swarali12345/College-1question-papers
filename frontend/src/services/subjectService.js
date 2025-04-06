@@ -14,6 +14,17 @@ export const subjectService = {
     }
   },
   
+  // Get subjects grouped by year and semester
+  getGroupedSubjects: async () => {
+    try {
+      const response = await api.get(`${SUBJECTS_ENDPOINT}/grouped`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching grouped subjects:', error);
+      throw error;
+    }
+  },
+  
   // Get subjects by year and semester
   getSubjectsByYearAndSemester: async (year, semester) => {
     try {

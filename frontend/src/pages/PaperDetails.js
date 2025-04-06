@@ -29,7 +29,7 @@ const PaperDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showPdfViewer, setShowPdfViewer] = useState(false);
-  const [viewerType, setViewerType] = useState('native'); // 'native' or 'external'
+  const [viewerType, setViewerType] = useState('external'); // changed from 'native' to 'external'
 
   useEffect(() => {
     const fetchPaperDetails = async () => {
@@ -188,7 +188,7 @@ const PaperDetails = () => {
                     startIcon={<PdfIcon />}
                     sx={{ ml: 2 }}
                   >
-                    {viewerType === 'native' ? 'Try External Viewer' : 'Try Native Viewer'}
+                    {viewerType === 'external' ? 'Try Native Viewer' : 'Try External Viewer'}
                   </Button>
                 )}
               </Box>

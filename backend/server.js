@@ -83,6 +83,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/papers', require('./routes/papers'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/feedback', require('./routes/feedback'));
+app.use('/api/subjects', require('./routes/subjects'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

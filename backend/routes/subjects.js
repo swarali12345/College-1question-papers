@@ -5,9 +5,13 @@ const {
   getAllSubjects,
   getSubjectsByYearAndSemester,
   getSubjectById,
-  deleteSubject
+  deleteSubject,
+  getGroupedSubjects
 } = require('../controllers/subjectController');
 const { protect, authorize } = require('../middleware/auth');
+
+// Route to get subjects grouped by year and semester
+router.get('/grouped', getGroupedSubjects);
 
 // Route to get all subjects and filter by year and semester
 router.get('/filter', getSubjectsByYearAndSemester);
